@@ -103,33 +103,55 @@ function switchTab(tabName) {
     const navLdrhub = document.getElementById("nav-ldrhub");
     const navSuperadmin = document.getElementById("nav-superadmin");
 
-    // Hide all
+    // Route Protection: Prevent regular clients from accessing Superadmin view
+    if (tabName === "superadmin" && appState.userRole !== "super_admin") {
+        tabName = "workspace";
+    }
+
+    // Hide all views
     if (workspaceView) workspaceView.classList.add("hidden");
     if (motherboardView) motherboardView.classList.add("hidden");
     if (ldrhubView) ldrhubView.classList.add("hidden");
     if (superadminView) superadminView.classList.add("hidden");
 
-    // Reset active classes
-    if (navWorkspace) navWorkspace.className = "hover:text-white transition-colors text-[#cccccc]";
-    if (navMotherboard) navMotherboard.className = "hover:text-white transition-colors text-[#cccccc]";
-    if (navLdrhub) navLdrhub.className = "hover:text-white transition-colors text-[#cccccc]";
-    if (navSuperadmin) navSuperadmin.className = "hover:text-white transition-colors text-[#cccccc]";
+    // Helper to safely toggle active/inactive tab styles without overwriting other utility classes (like hidden)
+    const setTabStyle = (el, isActive) => {
+        if (!el) return;
+        if (isActive) {
+            el.classList.add("text-white", "font-semibold");
+            el.classList.remove("text-[#cccccc]");
+        } else {
+            el.classList.remove("text-white", "font-semibold");
+            el.classList.add("text-[#cccccc]");
+        }
+    };
 
+    setTabStyle(navWorkspace, tabName === "workspace");
+    setTabStyle(navMotherboard, tabName === "motherboard");
+    setTabStyle(navLdrhub, tabName === "ldrhub");
+    setTabStyle(navSuperadmin, tabName === "superadmin");
+
+    // Explicitly enforce Superadmin menu item visibility based on active session role
+    if (navSuperadmin) {
+        if (appState.userRole === "super_admin") {
+            navSuperadmin.classList.remove("hidden");
+        } else {
+            navSuperadmin.classList.add("hidden");
+        }
+    }
+
+    // Activate the selected view
     if (tabName === "workspace") {
         if (workspaceView) workspaceView.classList.remove("hidden");
-        if (navWorkspace) navWorkspace.className = "text-white font-semibold transition-colors";
         renderWorkspace();
     } else if (tabName === "motherboard") {
         if (motherboardView) motherboardView.classList.remove("hidden");
-        if (navMotherboard) navMotherboard.className = "text-white font-semibold transition-colors";
         renderMotherboardDashboard();
     } else if (tabName === "ldrhub") {
         if (ldrhubView) ldrhubView.classList.remove("hidden");
-        if (navLdrhub) navLdrhub.className = "text-white font-semibold transition-colors";
         renderLdrHub();
     } else if (tabName === "superadmin") {
         if (superadminView) superadminView.classList.remove("hidden");
-        if (navSuperadmin) navSuperadmin.className = "text-white font-semibold transition-colors";
         renderSuperadminPanel();
     }
 }

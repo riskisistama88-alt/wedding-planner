@@ -349,10 +349,12 @@ function renderSaRoles() {
         
         // Badges for permissions
         let permBadges = [];
-        if (role.permissions.canEditVendor) permBadges.push(`<span class="bg-blue-50 text-blue-700 border border-blue-200 text-[9px] px-1.5 py-0.5 rounded-[4px] font-semibold">Vendor</span>`);
-        if (role.permissions.canEditBudget) permBadges.push(`<span class="bg-purple-50 text-purple-700 border border-purple-200 text-[9px] px-1.5 py-0.5 rounded-[4px] font-semibold">Budget</span>`);
-        if (role.permissions.canEditMilestone) permBadges.push(`<span class="bg-amber-50 text-amber-700 border border-amber-200 text-[9px] px-1.5 py-0.5 rounded-[4px] font-semibold">Milestone</span>`);
-        if (role.permissions.canVerifyPayment) permBadges.push(`<span class="bg-emerald-50 text-emerald-700 border border-emerald-200 text-[9px] px-1.5 py-0.5 rounded-[4px] font-semibold">Verify</span>`);
+        if (role.permissions) {
+            if (role.permissions.canEditVendor) permBadges.push(`<span class="bg-blue-50 text-blue-700 border border-blue-200 text-[9px] px-1.5 py-0.5 rounded-[4px] font-semibold">Vendor</span>`);
+            if (role.permissions.canEditBudget) permBadges.push(`<span class="bg-purple-50 text-purple-700 border border-purple-200 text-[9px] px-1.5 py-0.5 rounded-[4px] font-semibold">Budget</span>`);
+            if (role.permissions.canEditMilestone) permBadges.push(`<span class="bg-amber-50 text-amber-700 border border-amber-200 text-[9px] px-1.5 py-0.5 rounded-[4px] font-semibold">Milestone</span>`);
+            if (role.permissions.canVerifyPayment) permBadges.push(`<span class="bg-emerald-50 text-emerald-700 border border-emerald-200 text-[9px] px-1.5 py-0.5 rounded-[4px] font-semibold">Verify</span>`);
+        }
 
         if (permBadges.length === 0) {
             permBadges.push(`<span class="bg-gray-100 text-gray-400 border border-gray-200 text-[9px] px-1.5 py-0.5 rounded-[4px] font-semibold">No Perms</span>`);
@@ -457,10 +459,10 @@ function editsaRole(email) {
     document.getElementById("sa-role-email-input").value = role.email;
     document.getElementById("sa-role-password-input").value = role.password;
 
-    document.getElementById("sa-perm-vendor").checked = !!role.permissions.canEditVendor;
-    document.getElementById("sa-perm-budget").checked = !!role.permissions.canEditBudget;
-    document.getElementById("sa-perm-milestone").checked = !!role.permissions.canEditMilestone;
-    document.getElementById("sa-perm-verify").checked = !!role.permissions.canVerifyPayment;
+    document.getElementById("sa-perm-vendor").checked = role.permissions ? !!role.permissions.canEditVendor : false;
+    document.getElementById("sa-perm-budget").checked = role.permissions ? !!role.permissions.canEditBudget : false;
+    document.getElementById("sa-perm-milestone").checked = role.permissions ? !!role.permissions.canEditMilestone : false;
+    document.getElementById("sa-perm-verify").checked = role.permissions ? !!role.permissions.canVerifyPayment : false;
 
     document.getElementById("sa-role-modal-title").innerText = "Ubah Otoritas Peran";
     document.getElementById("sa-role-modal").classList.remove("hidden");

@@ -1,20 +1,11 @@
 window.onload = function() {
-    // Load projects list first
-    const savedProjects = localStorage.getItem("aura_projects_list");
-    if (savedProjects) {
-        try {
-            appState.projects = JSON.parse(savedProjects);
-            // Dynamic Migration: Force update local cache with the new active GAS URL for default project
-            const defaultProj = appState.projects.find(p => p.id === "WD-AURA-002");
-            if (defaultProj && (!defaultProj.gasApiUrl || defaultProj.gasApiUrl === "")) {
-                defaultProj.gasApiUrl = "https://script.google.com/macros/s/AKfycbyve5t4AnFkZjlzYJ-PNX610aNgFD8fsSYJg60APHMshT6hBgZhrK-2GHxdIv8JCxnsig/exec";
-                localStorage.setItem("aura_projects_list", JSON.stringify(appState.projects));
-            }
-        } catch(e) {
-            appState.projects = [...defaultProjectsList];
-        }
-    } else {
-        appState.projects = [...defaultProjectsList];
+    // Load projects list first using robust helper function
+    appState.projects = getLocalStorageArray("aura_projects_list", [...defaultProjectsList]);
+    
+    // Check and update GAS URL for default project if needed
+    const defaultProj = appState.projects.find(p => p.id === "WD-AURA-002");
+    if (defaultProj && (!defaultProj.gasApiUrl || defaultProj.gasApiUrl === "")) {
+        defaultProj.gasApiUrl = "https://script.google.com/macros/s/AKfycbyve5t4AnFkZjlzYJ-PNX610aNgFD8fsSYJg60APHMshT6hBgZhrK-2GHxdIv8JCxnsig/exec";
         localStorage.setItem("aura_projects_list", JSON.stringify(appState.projects));
     }
 
@@ -38,6 +29,8 @@ window.onload = function() {
         if (keyInput) keyInput.value = savedGeminiKey;
     } else {
         appState.geminiApiKey = "";
+        const keyInput = document.getElementById("gemini-api-key-input");
+        if (keyInput) keyInput.value = "";
     }
 
     if (localSession) {

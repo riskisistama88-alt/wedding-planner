@@ -840,3 +840,103 @@ function handleVenueCompSubmit(e) {
     renderVenueComparison();
     showToast("Analisis perbandingan venue berhasil disimpan!", "success");
 }
+
+function autoGenerateVenueComparison() {
+    if (!appState.geminiApiKey) {
+        showToast("Gemini API Key belum dikonfigurasi! Buka menu 'Setup GAS & AI' untuk menyimpannya.", "error");
+        return;
+    }
+
+    const venues = appState.vendors.filter(v => v.category === "Venue");
+    if (venues.length < 2) {
+        showToast("Gagal menganalisis. Minimal harus ada 2 opsi vendor di kategori Venue pada database!", "error");
+        return;
+    }
+
+    const btn = document.getElementById("btn-auto-vc");
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin mr-1"></i> Processing...`;
+    }
+
+    // Prepare vendor details
+    let venueDetails = "";
+    venues.forEach((v, idx) => {
+        venueDetails += `Venue ${idx + 1} (${v.status === 'Selected' ? 'Terpilih' : 'Dieliminasi'}):\n- Nama: ${v.vendor_name}\n- Paket: ${v.package_name}\n- Harga: Rp${v.price.toLocaleString('id-ID')}\n- Catatan: ${v.notes || '-'}\n\n`;
+    });
+
+    const prompt = `Anda adalah asisten analis venue pernikahan. Tugas Anda adalah membandingkan dua opsi venue berikut ini:
+${venueDetails}
+Analisis kelebihan, harga, fasilitas, listrik, kapasitas, dan kepraktisan. 
+Tentukan mana Venue A (Terpilih/Selected) dan Venue B (Dieliminasi/Eliminated) berdasarkan status di atas. Tulis alasan eliminasi secara ringkas, padat, dan profesional.
+Ekstrak perbandingan fitur teknis penting (minimal 4 fitur, seperti Harga Sewa, Listrik, Fasilitas AC, Kapasitas, dll.).
+
+Kembalikan hasil analisis HANYA dalam format JSON mentah valid seperti ini (jangan ada penjelasan lain di luar JSON):
+{
+  "venue_a": "Nama Venue Terpilih",
+  "venue_b": "Nama Venue Dieliminasi",
+  "elimination_reason": "Alasan mengapa memilih Venue A dibanding Venue B...",
+  "features": [
+    {
+      "feature_name": "Harga Sewa",
+      "value_a": "Detail Harga Venue A",
+      "value_b": "Detail Harga Venue B",
+      "is_highlight_a": true,
+      "is_highlight_b": false
+    }
+  ]
+}`;
+
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${appState.geminiApiKey}`;
+
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            contents: [{
+                parts: [{ text: prompt }]
+            }]
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts[0]) {
+            let resultText = data.candidates[0].content.parts[0].text.trim();
+            
+            // Clean markdown blocks if returned by Gemini (e.g. ```json ... ```)
+            if (resultText.startsWith("```")) {
+                resultText = resultText.replace(/^```json/, "").replace(/^```/, "").replace(/```$/, "").trim();
+            }
+
+            try {
+                const parsed = JSON.parse(resultText);
+                
+                document.getElementById("vc-venue-a-input").value = parsed.venue_a || "";
+                document.getElementById("vc-venue-b-input").value = parsed.venue_b || "";
+                document.getElementById("vc-reason-input").value = parsed.elimination_reason || "";
+
+                tempFeatures = parsed.features || [];
+                renderFeaturesListInModal();
+
+                showToast("Analisis komparasi venue berhasil digenerate otomatis!", "success");
+            } catch (jsonErr) {
+                console.error("JSON parsing error:", jsonErr, resultText);
+                showToast("Format respons AI tidak valid. Coba lagi.", "error");
+            }
+        } else {
+            showToast("Respons API tidak valid. Periksa kuota/status API Key Anda.", "error");
+        }
+    })
+    .catch(err => {
+        console.error("API error:", err);
+        showToast("Gagal memanggil Gemini API. Coba lagi.", "error");
+    })
+    .finally(() => {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i> <span>Generate</span>`;
+        }
+    });
+}

@@ -1,3 +1,25 @@
+function getLocalStorageArray(key, fallback = []) {
+    const item = localStorage.getItem(key);
+    if (!item) return fallback;
+    try {
+        const parsed = JSON.parse(item);
+        return Array.isArray(parsed) ? parsed : fallback;
+    } catch(e) {
+        return fallback;
+    }
+}
+
+function getLocalStorageObject(key, fallback = {}) {
+    const item = localStorage.getItem(key);
+    if (!item) return fallback;
+    try {
+        const parsed = JSON.parse(item);
+        return (parsed && typeof parsed === "object" && !Array.isArray(parsed)) ? parsed : fallback;
+    } catch(e) {
+        return fallback;
+    }
+}
+
 function hasPermission(permissionName) {
     if (appState.userRole === "super_admin") return true;
     
@@ -29,54 +51,23 @@ function loadProjectData(projectId) {
     appState.gasApiUrl = project.gasApiUrl;
 
     // Seed tasks
-    const tasksKey = `aura_project_${projectId}_tasks`;
-    appState.tasks = localStorage.getItem(tasksKey) 
-        ? JSON.parse(localStorage.getItem(tasksKey)) 
-        : (projectId === "WD-AURA-002" ? [...defaultTasks] : []);
+    appState.tasks = getLocalStorageArray(`aura_project_${projectId}_tasks`, projectId === "WD-AURA-002" ? [...defaultTasks] : []);
 
     // Seed guests
-    const guestsKey = `aura_project_${projectId}_guests`;
-    appState.guests = localStorage.getItem(guestsKey) 
-        ? JSON.parse(localStorage.getItem(guestsKey)) 
-        : (projectId === "WD-AURA-002" ? [...defaultGuests] : []);
+    appState.guests = getLocalStorageArray(`aura_project_${projectId}_guests`, projectId === "WD-AURA-002" ? [...defaultGuests] : []);
 
     // Seed payments
-    const paymentsKey = `aura_project_${projectId}_payments`;
-    const savedRaw = localStorage.getItem(paymentsKey);
-    let saved = [];
-    if (savedRaw) {
-        try {
-            saved = JSON.parse(savedRaw);
-        } catch(e) {
-            saved = [];
-        }
-    } else {
-        saved = [];
-    }
-    appState.payments = saved;
+    appState.payments = getLocalStorageArray(`aura_project_${projectId}_payments`, []);
 
     // Seed vendors & logs
-    const vendorsKey = `aura_project_${projectId}_vendors`;
-    appState.vendors = localStorage.getItem(vendorsKey)
-        ? JSON.parse(localStorage.getItem(vendorsKey))
-        : (projectId === "WD-AURA-002" ? [...defaultVendorList] : []);
-
-    const logsKey = `aura_project_${projectId}_logs`;
-    appState.logs = localStorage.getItem(logsKey)
-        ? JSON.parse(localStorage.getItem(logsKey))
-        : (projectId === "WD-AURA-002" ? [...defaultLogs] : []);
+    appState.vendors = getLocalStorageArray(`aura_project_${projectId}_vendors`, projectId === "WD-AURA-002" ? [...defaultVendorList] : []);
+    appState.logs = getLocalStorageArray(`aura_project_${projectId}_logs`, projectId === "WD-AURA-002" ? [...defaultLogs] : []);
 
     // Seed timeline
-    const timelineKey = `aura_project_${projectId}_timeline`;
-    appState.timeline = localStorage.getItem(timelineKey)
-        ? JSON.parse(localStorage.getItem(timelineKey))
-        : (projectId === "WD-AURA-002" ? [...defaultTimeline] : []);
+    appState.timeline = getLocalStorageArray(`aura_project_${projectId}_timeline`, projectId === "WD-AURA-002" ? [...defaultTimeline] : []);
 
     // Seed venue comparison
-    const venueCompKey = `aura_project_${projectId}_venue_comparison`;
-    appState.venueComparison = localStorage.getItem(venueCompKey)
-        ? JSON.parse(localStorage.getItem(venueCompKey))
-        : (projectId === "WD-AURA-002" ? JSON.parse(JSON.stringify(defaultVenueComparison)) : { venue_a: "Venue A", venue_b: "Venue B", elimination_reason: "", features: [] });
+    appState.venueComparison = getLocalStorageObject(`aura_project_${projectId}_venue_comparison`, projectId === "WD-AURA-002" ? JSON.parse(JSON.stringify(defaultVenueComparison)) : { venue_a: "Venue A", venue_b: "Venue B", elimination_reason: "", features: [] });
 }
 
 function saveProjectData(projectId) {

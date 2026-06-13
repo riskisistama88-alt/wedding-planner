@@ -36,14 +36,14 @@
             </div>
         </div>
         <div class="flex items-center space-x-2 sm:space-x-4">
-            <select id="superadmin-project-selector" onchange="superadminSwitchProject(this.value)" class="bg-[#1d1d1f] text-white border border-[#333333] rounded-[8px] text-[11px] py-1 px-2 focus:outline-none hidden">
+            <select id="superadmin-project-selector" onchange="superadminSwitchProject(this.value)" class="bg-[#1d1d1f] text-white border border-[#333333] rounded-[8px] text-[11px] py-1 px-2 focus:outline-none max-w-[120px] sm:max-w-none hidden">
                 <!-- Loaded dynamically -->
             </select>
             <button onclick="toggleDeveloperConsole()" class="active-scale text-[#2997ff] hover:text-white transition-colors text-[11px] bg-[#1d1d1f] py-1 px-3 rounded-[8px] border border-[#333333]">
                 <i class="fa-solid fa-gears mr-1"></i> <span class="hidden sm:inline">Setup GAS &amp; AI</span>
             </button>
-            <div id="user-profile" class="flex items-center space-x-2">
-                <span id="user-badge" class="bg-[#272729] text-white px-2 py-0.5 rounded-[5px] text-[10px]">Decider</span>
+            <div id="user-profile" class="hidden md:flex items-center space-x-2">
+                <span id="user-badge" class="bg-[#272729] text-white px-2.5 py-0.5 rounded-[5px] text-[10px]">Decider</span>
                 <span class="text-xs text-[#cccccc] hidden sm:inline" id="display-email">indah.adr@gmail.com</span>
                 <button onclick="handleLogout()" class="text-red-400 hover:text-red-300 ml-2"><i class="fa-solid fa-power-off"></i></button>
             </div>
@@ -79,6 +79,38 @@
                     <i class="fa-solid fa-arrow-right"></i>
                 </button>
             </div>
+
+            <!-- Demo Accounts Reference Accordion -->
+            <div class="mt-6 pt-4 border-t border-[#272729]">
+                <details class="group bg-[#272729]/40 border border-[#272729] rounded-[11px] p-3 text-xs text-[#a1a1a6] cursor-pointer">
+                    <summary class="flex items-center justify-between font-semibold text-[#cccccc] select-none">
+                        <span><i class="fa-solid fa-circle-info mr-1 text-[#2997ff]"></i> Akun Demo &amp; Akses Superadmin</span>
+                        <i class="fa-solid fa-chevron-down text-[10px] group-open:rotate-180 transition-transform"></i>
+                    </summary>
+                    <div class="mt-2.5 space-y-2.5 text-[#86868b] border-t border-[#3a3a3c] pt-2 pointer-events-auto">
+                        <div>
+                            <span class="text-white font-semibold">1. Superadmin Console:</span>
+                            <div class="font-mono mt-0.5 pl-2">Email: <span class="text-[#2997ff]">admin@aurawedding.com</span></div>
+                            <div class="font-mono pl-2">Token: <span class="text-[#2997ff]">superadmin123</span></div>
+                        </div>
+                        <div>
+                            <span class="text-white font-semibold">2. Client Decider (Tama):</span>
+                            <div class="font-mono mt-0.5 pl-2">Email: <span class="text-[#2997ff]">tama.decider@sg-corp.com</span></div>
+                            <div class="font-mono pl-2">Token: <span class="text-[#2997ff]">270327</span></div>
+                        </div>
+                        <div>
+                            <span class="text-white font-semibold">3. Client Initiator (Indah):</span>
+                            <div class="font-mono mt-0.5 pl-2">Email: <span class="text-[#2997ff]">indah.adr@gmail.com</span></div>
+                            <div class="font-mono pl-2">Token: <span class="text-[#2997ff]">270327</span></div>
+                        </div>
+                        <div>
+                            <span class="text-white font-semibold">4. Wedding Planner (Aura WO):</span>
+                            <div class="font-mono mt-0.5 pl-2">Email: <span class="text-[#2997ff]">wp_planner@aurawedding.com</span></div>
+                            <div class="font-mono pl-2">Token: <span class="text-[#2997ff]">270327</span></div>
+                        </div>
+                    </div>
+                </details>
+            </div>
             
             <div class="mt-8 pt-6 border-t border-[#272729] text-center text-xs text-[#7a7a7a]">
                 <p class="mb-1"><i class="fa-solid fa-shield-halved mr-1"></i> Enkripsi Token Aman Terverifikasi</p>
@@ -90,7 +122,7 @@
     <!-- Frosted Sub-Navigation: Sticky under 44px top nav -->
     <header class="h-[52px] frosted-glass border-b border-[#e0e0e0] flex items-center justify-between px-6 z-40 fixed top-[44px] left-0 right-0 text-[#1d1d1f]">
         <div class="flex items-center space-x-4">
-            <span class="font-semibold text-[17px] apple-tight-title" id="wedding-title">Indah &amp; Tama's Wedding</span>
+            <span class="font-semibold text-[15px] sm:text-[17px] apple-tight-title truncate max-w-[150px] sm:max-w-none" id="wedding-title">Indah &amp; Tama's Wedding</span>
             <span id="sync-status-badge" class="bg-amber-50 border border-amber-200 text-amber-700 px-2.5 py-0.5 rounded-[9999px] text-[12px] hidden sm:inline-flex items-center space-x-1">
                 <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
                 <span>Simulasi Lokal</span>
@@ -143,17 +175,19 @@
                 <!-- Category Shortcuts - Apple Pill List style -->
                 <div class="bg-white rounded-[18px] p-5 border border-[#e0e0e0] space-y-3">
                     <h3 class="text-xs font-semibold text-[#7a7a7a] uppercase tracking-wider mb-2">Kategori Vendor</h3>
-                    <div class="space-y-1.5" id="category-pills">
-                        <button onclick="filterCategory('All')" id="pill-All" class="w-full text-left px-4 py-2.5 rounded-[11px] text-[14px] font-medium flex items-center justify-between transition active-scale bg-[#0066cc] text-white">
+                    <div class="flex flex-row overflow-x-auto gap-2 pb-2 lg:pb-0 lg:flex-col lg:space-y-1.5 scrollbar-none" id="category-pills">
+                        <button onclick="filterCategory('All')" id="pill-All" class="shrink-0 text-left px-4 py-2.5 rounded-[11px] text-[14px] font-medium flex items-center justify-between transition active-scale w-auto lg:w-full bg-[#0066cc] text-white">
                             <span>Semua Kategori</span>
-                            <span class="text-xs bg-white/20 px-2 py-0.5 rounded-[5px]" id="count-all">0</span>
+                            <span class="text-xs bg-white/20 px-2 py-0.5 rounded-[5px] ml-2" id="count-all">0</span>
                         </button>
                         <!-- JavaScript will dynamically generate categories count -->
                     </div>
                 </div>
 
-                <!-- Motherboard Live Health Progress Ring -->
-                <div class="bg-white rounded-[18px] p-5 border border-[#e0e0e0] text-center">
+                <!-- Secondary Widgets Container: Side-by-side on tablet, stacked on mobile/desktop -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-6">
+                    <!-- Motherboard Live Health Progress Ring -->
+                    <div class="bg-white rounded-[18px] p-5 border border-[#e0e0e0] text-center flex flex-col justify-between">
                     <h3 class="text-xs font-semibold text-[#7a7a7a] uppercase tracking-wider text-left mb-4">Penggunaan Anggaran</h3>
                     <div class="relative w-[150px] h-[150px] mx-auto mb-4 flex items-center justify-center">
                         <!-- Dynamic Donut/Progress Chart Simulation -->
@@ -213,6 +247,7 @@
                         </div>
                     </div>
                 </div>
+                </div> <!-- Closing secondary widgets grid -->
                 
             </aside>
 
@@ -323,7 +358,7 @@
                     </button>
                 </div>
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left text-sm text-[#1d1d1f]">
+                    <table class="w-full min-w-[700px] text-left text-sm text-[#1d1d1f]">
                         <thead class="bg-[#f5f5f7] text-[11px] uppercase tracking-wider text-[#7a7a7a] border-b border-[#e0e0e0]">
                             <tr>
                                 <th class="px-6 py-4">Kategori</th>
@@ -347,23 +382,23 @@
                         <h3 class="text-lg font-semibold text-[#1d1d1f] apple-tight-title"><i class="fa-solid fa-file-invoice-dollar mr-2 text-[#0066cc]"></i> Jadwal Termin Pembayaran &amp; Bukti Transfer</h3>
                         <p class="text-xs text-[#7a7a7a]">Rincian termin pembayaran untuk vendor terpilih (DP 30% &amp; Pelunasan 70%)</p>
                     </div>
-                    <div class="flex items-center space-x-4 text-xs font-semibold">
-                        <div class="bg-[#fafafc] border border-[#e0e0e0] px-4 py-2 rounded-[11px]">
+                    <div class="flex flex-wrap items-center gap-3 text-xs font-semibold w-full sm:w-auto">
+                        <div class="bg-[#fafafc] border border-[#e0e0e0] px-4 py-2 rounded-[11px] flex-1 sm:flex-none">
                             <span class="text-[10px] text-[#7a7a7a] block leading-none">Total Terbayar</span>
                             <span class="text-sm font-bold text-emerald-600 mt-1 block" id="pm-total-paid">Rp0</span>
                         </div>
-                        <div class="bg-[#fafafc] border border-[#e0e0e0] px-4 py-2 rounded-[11px]">
+                        <div class="bg-[#fafafc] border border-[#e0e0e0] px-4 py-2 rounded-[11px] flex-1 sm:flex-none">
                             <span class="text-[10px] text-[#7a7a7a] block leading-none">Sisa Hutang Vendor</span>
                             <span class="text-sm font-bold text-rose-600 mt-1 block" id="pm-total-unpaid">Rp0</span>
                         </div>
-                        <button onclick="openAddMilestoneModal()" class="active-scale bg-[#0066cc] text-white rounded-full text-xs px-4 py-2.5 font-semibold hover:bg-[#0071e3] transition flex items-center space-x-1.5 h-11">
+                        <button onclick="openAddMilestoneModal()" class="active-scale bg-[#0066cc] text-white rounded-full text-xs px-4 py-2.5 font-semibold hover:bg-[#0071e3] transition flex items-center space-x-1.5 h-11 w-full sm:w-auto justify-center">
                             <i class="fa-solid fa-plus"></i>
                             <span>Tambah Termin</span>
                         </button>
                     </div>
                 </div>
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left text-sm text-[#1d1d1f]">
+                    <table class="w-full min-w-[800px] text-left text-sm text-[#1d1d1f]">
                         <thead class="bg-[#f5f5f7] text-[11px] uppercase tracking-wider text-[#7a7a7a] border-b border-[#e0e0e0]">
                             <tr>
                                 <th class="px-6 py-4">Vendor</th>
@@ -380,7 +415,9 @@
                         </tbody>
                     </table>
                 </div>
-              <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            </div> <!-- Closing Payment Milestones Table card -->
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <!-- LDR Timeline -->
                 <div class="bg-white rounded-[18px] p-6 border border-[#e0e0e0] space-y-6">
                     <div class="flex items-center justify-between">
@@ -541,7 +578,7 @@
 
                     <!-- Guest Table Container -->
                     <div class="overflow-x-auto border border-[#e0e0e0] rounded-[11px] max-h-[350px] overflow-y-auto">
-                        <table class="w-full text-left text-xs text-[#1d1d1f]">
+                        <table class="w-full min-w-[550px] text-left text-xs text-[#1d1d1f]">
                             <thead class="bg-[#f5f5f7] text-[10px] uppercase tracking-wider text-[#7a7a7a] border-b border-[#e0e0e0] sticky top-0">
                                 <tr>
                                     <th class="px-4 py-3">Nama Undangan</th>
@@ -615,7 +652,7 @@
                         <p class="text-xs text-[#7a7a7a]">Daftar proyek client aktif yang dikelola dalam sistem multi-tenant.</p>
                     </div>
                     <div class="overflow-x-auto flex-1">
-                        <table class="w-full text-left text-sm text-[#1d1d1f]">
+                        <table class="w-full min-w-[600px] text-left text-sm text-[#1d1d1f]">
                             <thead class="bg-[#f5f5f7] text-[10px] uppercase tracking-wider text-[#7a7a7a] border-b border-[#e0e0e0]">
                                 <tr>
                                     <th class="px-5 py-3">Nama Proyek</th>
@@ -1235,6 +1272,18 @@ function doPost(e) {
                 </button>
             </div>
             <form onsubmit="handleVenueCompSubmit(event)" class="flex-1 overflow-y-auto p-6 space-y-4">
+                <!-- AI Automatic Comparison Banner -->
+                <div class="flex items-center justify-between bg-blue-50/50 border border-blue-100 p-4 rounded-[11px] mb-4">
+                    <div class="space-y-0.5">
+                        <span class="text-xs font-bold text-[#0066cc] flex items-center"><i class="fa-solid fa-wand-magic-sparkles mr-1.5"></i> Analisis Otomatis AI</span>
+                        <span class="text-[11px] text-[#7a7a7a] block leading-normal">Bandingkan opsi venue terdaftar secara otomatis menggunakan teknologi Gemini AI.</span>
+                    </div>
+                    <button type="button" id="btn-auto-vc" onclick="autoGenerateVenueComparison()" class="active-scale bg-[#0066cc] text-white rounded-full text-xs px-4 py-2 font-semibold hover:bg-[#0071e3] transition flex items-center space-x-1 shrink-0">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                        <span>Generate</span>
+                    </button>
+                </div>
+
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-semibold text-[#7a7a7a] mb-1">Nama Venue A (Terpilih/Selected)</label>

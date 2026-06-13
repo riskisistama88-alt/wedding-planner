@@ -1,9 +1,3 @@
-function useDemoSession() {
-    document.getElementById("auth-email").value = "indah.adr@gmail.com";
-    document.getElementById("auth-token").value = "270327";
-    handleLogin();
-}
-
 function handleLogin() {
     const emailInput = document.getElementById("auth-email").value.trim().toLowerCase();
     const tokenInput = document.getElementById("auth-token").value;

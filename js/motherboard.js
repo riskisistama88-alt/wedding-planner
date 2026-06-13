@@ -29,34 +29,35 @@ function renderMotherboardDashboard() {
                     <td colspan="5" class="px-6 py-8 text-center text-xs text-[#7a7a7a]">Belum ada vendor terpilih. Tentukan pilihan Anda di Workspace.</td>
                 </tr>
             `;
-            return;
-        }
+        } else {
+            selectedVendors.forEach(v => {
+                const row = document.createElement("tr");
+                row.className = "hover:bg-[#fafafc] transition-colors";
+                
+                let driveIcon = "";
+                if (v.drive_url) {
+                    driveIcon = `
+                        <a href="${v.drive_url}" target="_blank" class="ml-2 text-emerald-600 hover:text-emerald-800 transition active-scale inline-flex items-center" title="Buka berkas di Google Drive">
+                            <i class="fa-brands fa-google-drive text-sm"></i>
+                        </a>
+                    `;
+                }
 
-        selectedVendors.forEach(v => {
-            const row = document.createElement("tr");
-            row.className = "hover:bg-[#fafafc] transition-colors";
-            
-            let driveIcon = "";
-            if (v.drive_url) {
-                driveIcon = `
-                    <a href="${v.drive_url}" target="_blank" class="ml-2 text-emerald-600 hover:text-emerald-800 transition active-scale inline-flex items-center" title="Buka berkas di Google Drive">
-                        <i class="fa-brands fa-google-drive text-sm"></i>
-                    </a>
+                row.innerHTML = `
+                    <td class="px-6 py-4 font-semibold text-xs text-[#7a7a7a] uppercase">${v.category}</td>
+                    <td class="px-6 py-4 font-bold text-sm text-[#1d1d1f] flex items-center">${v.vendor_name} ${driveIcon}</td>
+                    <td class="px-6 py-4 text-xs text-[#7a7a7a]">${v.package_name}</td>
+                    <td class="px-6 py-4 font-semibold text-sm text-[#0066cc]">${formatIDR(v.price)}</td>
+                    <td class="px-6 py-4 text-xs leading-relaxed text-[#1d1d1f]">${v.notes || "-"}</td>
                 `;
-            }
-
-            row.innerHTML = `
-                <td class="px-6 py-4 font-semibold text-xs text-[#7a7a7a] uppercase">${v.category}</td>
-                <td class="px-6 py-4 font-bold text-sm text-[#1d1d1f] flex items-center">${v.vendor_name} ${driveIcon}</td>
-                <td class="px-6 py-4 text-xs text-[#7a7a7a]">${v.package_name}</td>
-                <td class="px-6 py-4 font-semibold text-sm text-[#0066cc]">${formatIDR(v.price)}</td>
-                <td class="px-6 py-4 text-xs leading-relaxed text-[#1d1d1f]">${v.notes || "-"}</td>
-            `;
-            tableBody.appendChild(row);
-        });
+                tableBody.appendChild(row);
+            });
+        }
     }
     
     renderPaymentMilestones();
+    renderTimeline();
+    renderVenueComparison();
 }
 
 function exportToPDF() {
@@ -542,4 +543,278 @@ function deleteMilestone(pmId) {
     renderPaymentMilestones();
     renderLogs();
     showToast("Termin pembayaran berhasil dihapus.", "info");
+}
+
+// =========================================================================
+// DYNAMIC LDR TIMELINE CRUD FUNCTIONS
+// =========================================================================
+
+function renderTimeline() {
+    const container = document.getElementById("timeline-events-container");
+    if (!container) return;
+    container.innerHTML = "";
+
+    if (!appState.timeline || appState.timeline.length === 0) {
+        container.innerHTML = `<div class="text-center py-8 text-xs text-[#7a7a7a]">Belum ada acara dalam timeline. Klik + untuk menambahkan.</div>`;
+        return;
+    }
+
+    appState.timeline.forEach((item, index) => {
+        const idx = index + 1;
+        let colorClass = "bg-blue-100 border-blue-500 text-blue-600";
+        if (idx % 3 === 2) colorClass = "bg-purple-100 border-purple-500 text-purple-600";
+        else if (idx % 3 === 0) colorClass = "bg-emerald-100 border-emerald-500 text-emerald-600";
+
+        const div = document.createElement("div");
+        div.className = "relative flex items-start space-x-4 group";
+        div.innerHTML = `
+            <div class="w-6 h-6 rounded-full ${colorClass} flex items-center justify-center text-xs font-semibold relative z-10">${idx}</div>
+            <div class="flex-1 bg-[#f5f5f7] p-4 rounded-[11px] border border-[#e0e0e0] flex items-start justify-between relative">
+                <div>
+                    <span class="text-xs font-bold text-blue-600 block uppercase tracking-wider">${item.date_label}</span>
+                    <h4 class="font-semibold text-sm mt-0.5 text-[#1d1d1f]">${item.title}</h4>
+                    <p class="text-xs text-[#7a7a7a] mt-1 leading-relaxed">${item.details}</p>
+                </div>
+                <div class="flex items-center space-x-1.5 ml-2">
+                    <button onclick="openEditTimelineModal('${item.id}')" class="active-scale text-gray-400 hover:text-[#0066cc] transition p-1" title="Edit Acara">
+                        <i class="fa-solid fa-pen text-[10px]"></i>
+                    </button>
+                    <button onclick="deleteTimeline('${item.id}')" class="active-scale text-gray-400 hover:text-rose-600 transition p-1" title="Hapus Acara">
+                        <i class="fa-regular fa-trash-can text-[10px]"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+        container.appendChild(div);
+    });
+}
+
+function openAddTimelineModal() {
+    document.getElementById("timeline-id-input").value = "";
+    document.getElementById("timeline-date-input").value = "";
+    document.getElementById("timeline-title-input").value = "";
+    document.getElementById("timeline-details-input").value = "";
+    document.getElementById("timeline-modal-title").innerHTML = `<i class="fa-regular fa-calendar-check text-[#0066cc] mr-2"></i> Tambah Acara Timeline`;
+    document.getElementById("timeline-modal").classList.remove("hidden");
+}
+
+function openEditTimelineModal(id) {
+    const item = appState.timeline.find(t => t.id === id);
+    if (!item) return;
+
+    document.getElementById("timeline-id-input").value = item.id;
+    document.getElementById("timeline-date-input").value = item.date_label;
+    document.getElementById("timeline-title-input").value = item.title;
+    document.getElementById("timeline-details-input").value = item.details;
+    document.getElementById("timeline-modal-title").innerHTML = `<i class="fa-solid fa-pen text-[#0066cc] mr-2"></i> Edit Acara Timeline`;
+    document.getElementById("timeline-modal").classList.remove("hidden");
+}
+
+function closeAddTimelineModal() {
+    document.getElementById("timeline-modal").classList.add("hidden");
+}
+
+function handleTimelineSubmit(e) {
+    e.preventDefault();
+    const id = document.getElementById("timeline-id-input").value;
+    const dateLabel = document.getElementById("timeline-date-input").value.trim();
+    const title = document.getElementById("timeline-title-input").value.trim();
+    const details = document.getElementById("timeline-details-input").value.trim();
+
+    if (!dateLabel || !title || !details) return;
+
+    if (id) {
+        const item = appState.timeline.find(t => t.id === id);
+        if (item) {
+            item.date_label = dateLabel;
+            item.title = title;
+            item.details = details;
+            showToast("Acara timeline berhasil diperbarui!", "success");
+        }
+    } else {
+        const newItem = {
+            id: "TL-" + Math.floor(100 + Math.random() * 900),
+            date_label: dateLabel,
+            title: title,
+            details: details
+        };
+        appState.timeline.push(newItem);
+        showToast("Acara timeline berhasil ditambahkan!", "success");
+    }
+
+    saveProjectData(appState.weddingId);
+    closeAddTimelineModal();
+    renderTimeline();
+}
+
+function deleteTimeline(id) {
+    if (confirm("Apakah Anda yakin ingin menghapus acara ini dari timeline?")) {
+        const index = appState.timeline.findIndex(t => t.id === id);
+        if (index === -1) return;
+        appState.timeline.splice(index, 1);
+        saveProjectData(appState.weddingId);
+        renderTimeline();
+        showToast("Acara timeline berhasil dihapus.", "info");
+    }
+}
+
+// =========================================================================
+// DYNAMIC VENUE COMPARISON CRUD FUNCTIONS
+// =========================================================================
+
+function renderVenueComparison() {
+    const tableContainer = document.getElementById("venue-comp-table-container");
+    const reasonContainer = document.getElementById("venue-comp-reason-container");
+    if (!tableContainer || !reasonContainer) return;
+
+    const vc = appState.venueComparison;
+    if (!vc || !vc.features) {
+        tableContainer.innerHTML = `<div class="text-center py-8 text-xs text-[#7a7a7a]">Belum ada data perbandingan venue. Klik tombol edit di atas untuk membuat.</div>`;
+        reasonContainer.innerHTML = "";
+        return;
+    }
+
+    let tableHtml = `
+        <div class="overflow-x-auto border border-[#e0e0e0] rounded-[11px]">
+            <table class="w-full text-left text-xs text-[#1d1d1f]">
+                <thead class="bg-[#f5f5f7] text-[10px] uppercase tracking-wider text-[#7a7a7a] border-b border-[#e0e0e0]">
+                    <tr>
+                        <th class="px-4 py-3">Fitur</th>
+                        <th class="px-4 py-3 bg-emerald-50 text-emerald-800 font-bold">${vc.venue_a || "Venue A (Terpilih)"}</th>
+                        <th class="px-4 py-3">${vc.venue_b || "Venue B (Dieliminasi)"}</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-[#e0e0e0]">
+    `;
+
+    if (vc.features.length === 0) {
+        tableHtml += `
+            <tr>
+                <td colspan="3" class="px-4 py-6 text-center text-xs text-[#7a7a7a]">Belum ada detail fitur yang dimasukkan.</td>
+            </tr>
+        `;
+    } else {
+        vc.features.forEach(feat => {
+            const classA = feat.is_highlight_a ? "bg-emerald-50/40 text-emerald-700 font-semibold" : "bg-emerald-50/40";
+            const classB = feat.is_highlight_b ? "text-red-600 font-semibold" : "";
+            
+            tableHtml += `
+                <tr>
+                    <td class="px-4 py-3 font-semibold">${feat.feature_name}</td>
+                    <td class="px-4 py-3 ${classA}">${feat.value_a || "-"}</td>
+                    <td class="px-4 py-3 ${classB}">${feat.value_b || "-"}</td>
+                </tr>
+            `;
+        });
+    }
+
+    tableHtml += `
+                </tbody>
+            </table>
+        </div>
+    `;
+    tableContainer.innerHTML = tableHtml;
+
+    if (vc.elimination_reason) {
+        reasonContainer.innerHTML = `
+            <div class="bg-blue-50 text-blue-800 border border-blue-100 p-3 rounded-[11px] text-[11px] leading-relaxed">
+                <i class="fa-solid fa-circle-check mr-1"></i> <strong>Alasan Eliminasi:</strong> ${vc.elimination_reason}
+            </div>
+        `;
+    } else {
+        reasonContainer.innerHTML = "";
+    }
+}
+
+let tempFeatures = [];
+
+function openEditVenueCompModal() {
+    const vc = appState.venueComparison || { venue_a: "", venue_b: "", elimination_reason: "", features: [] };
+    
+    document.getElementById("vc-venue-a-input").value = vc.venue_a || "";
+    document.getElementById("vc-venue-b-input").value = vc.venue_b || "";
+    document.getElementById("vc-reason-input").value = vc.elimination_reason || "";
+
+    tempFeatures = vc.features ? JSON.parse(JSON.stringify(vc.features)) : [];
+    renderFeaturesListInModal();
+    
+    document.getElementById("venue-comp-modal").classList.remove("hidden");
+}
+
+function closeEditVenueCompModal() {
+    document.getElementById("venue-comp-modal").classList.add("hidden");
+}
+
+function renderFeaturesListInModal() {
+    const container = document.getElementById("vc-features-list-container");
+    if (!container) return;
+    container.innerHTML = "";
+
+    if (tempFeatures.length === 0) {
+        container.innerHTML = `<div class="text-center py-4 text-xs text-gray-400 border border-dashed border-gray-200 rounded-lg">Belum ada fitur. Klik "+ Tambah Fitur".</div>`;
+        return;
+    }
+
+    tempFeatures.forEach((feat, index) => {
+        const div = document.createElement("div");
+        div.className = "bg-[#f9f9fa] border border-[#e0e0e0] p-3 rounded-lg flex items-center space-x-2.5 text-xs";
+        div.innerHTML = `
+            <input type="text" placeholder="Fitur (ex: Luas)" value="${feat.feature_name || ''}" oninput="tempFeatures[${index}].feature_name = this.value" class="w-1/4 bg-white border border-[#e0e0e0] rounded-lg px-2 py-1.5 focus:outline-none" required>
+            
+            <div class="flex-1 flex items-center space-x-1">
+                <input type="text" placeholder="Detail Venue A" value="${feat.value_a || ''}" oninput="tempFeatures[${index}].value_a = this.value" class="flex-1 bg-white border border-[#e0e0e0] rounded-lg px-2 py-1.5 focus:outline-none">
+                <label class="flex items-center space-x-0.5 cursor-pointer">
+                    <input type="checkbox" ${feat.is_highlight_a ? 'checked' : ''} onchange="tempFeatures[${index}].is_highlight_a = this.checked" class="rounded text-[#0066cc] w-3.5 h-3.5">
+                    <span class="text-[10px] text-gray-500">Highlight</span>
+                </label>
+            </div>
+            
+            <div class="flex-1 flex items-center space-x-1">
+                <input type="text" placeholder="Detail Venue B" value="${feat.value_b || ''}" oninput="tempFeatures[${index}].value_b = this.value" class="flex-1 bg-white border border-[#e0e0e0] rounded-lg px-2 py-1.5 focus:outline-none">
+                <label class="flex items-center space-x-0.5 cursor-pointer">
+                    <input type="checkbox" ${feat.is_highlight_b ? 'checked' : ''} onchange="tempFeatures[${index}].is_highlight_b = this.checked" class="rounded text-red-600 w-3.5 h-3.5">
+                    <span class="text-[10px] text-gray-500">Highlight</span>
+                </label>
+            </div>
+
+            <button type="button" onclick="deleteFeatureRowInModal(${index})" class="active-scale w-7 h-7 rounded-lg bg-white border border-[#e0e0e0] text-rose-600 hover:bg-rose-50 flex items-center justify-center transition">
+                <i class="fa-regular fa-trash-can text-xs"></i>
+            </button>
+        `;
+        container.appendChild(div);
+    });
+}
+
+function addFeatureRowInModal() {
+    tempFeatures.push({
+        feature_name: "",
+        value_a: "",
+        value_b: "",
+        is_highlight_a: false,
+        is_highlight_b: false
+    });
+    renderFeaturesListInModal();
+}
+
+function deleteFeatureRowInModal(index) {
+    tempFeatures.splice(index, 1);
+    renderFeaturesListInModal();
+}
+
+function handleVenueCompSubmit(e) {
+    e.preventDefault();
+    
+    const cleanedFeatures = tempFeatures.filter(f => f.feature_name.trim() !== "");
+
+    appState.venueComparison = {
+        venue_a: document.getElementById("vc-venue-a-input").value.trim(),
+        venue_b: document.getElementById("vc-venue-b-input").value.trim(),
+        elimination_reason: document.getElementById("vc-reason-input").value.trim(),
+        features: cleanedFeatures
+    };
+
+    saveProjectData(appState.weddingId);
+    closeEditVenueCompModal();
+    renderVenueComparison();
+    showToast("Analisis perbandingan venue berhasil disimpan!", "success");
 }

@@ -223,14 +223,6 @@ let presenceInterval = null;
 function startPresenceSimulation() {
     if (presenceInterval) clearInterval(presenceInterval);
     
-    const activities = [
-        { user: "tama.decider@sg-corp.com", name: "Tama", text: "sedang meninjau anggaran katering..." },
-        { user: "wp_planner@aurawedding.com", name: "Aura WO", text: "memperbarui susunan acara (rundown) Lamaran..." },
-        { user: "indah.adr@gmail.com", name: "Indah", text: "sedang mencari alternatif foto dekorasi earth tone..." },
-        { user: "tama.decider@sg-corp.com", name: "Tama", text: "menyetujui alur kerja WO Dienisa MC..." },
-        { user: "wp_planner@aurawedding.com", name: "Aura WO", text: "menambahkan catatan teknis pada Aula Badarusamsi..." }
-    ];
-
     presenceInterval = setInterval(() => {
         if (!appState.isLoggedIn) return;
         
@@ -242,20 +234,34 @@ function startPresenceSimulation() {
         updatePresenceUI("indah", indahStatus);
         updatePresenceUI("tama", tamaStatus);
         updatePresenceUI("wo", woStatus);
-
-        const randomAct = activities[Math.floor(Math.random() * activities.length)];
-        showToast(`${randomAct.name}: ${randomAct.text}`, "info");
-
-        const simulatedLog = {
-            tanggal: new Date(),
-            user: randomAct.user,
-            aktivitas: "LIVE_COLLAB",
-            detail: `${randomAct.name} ${randomAct.text}`
-        };
         
-        appState.logs.unshift(simulatedLog);
-        renderLogs();
+        // Background silent fetch if live backend is connected
+        if (appState.gasApiUrl && appState.gasApiUrl !== "" && !appState.gasApiUrl.includes("simulasi")) {
+            fetchDataFromGasSilently();
+        }
     }, 60000); // Trigger every 60 seconds
+}
+
+function fetchDataFromGasSilently() {
+    if (!appState.gasApiUrl) return;
+    
+    fetch(`${appState.gasApiUrl}?action=getVendorCatalog&wedding_id=${appState.weddingId}`)
+        .then(res => res.json())
+        .then(response => {
+            if (response.success && response.data) {
+                const currentStr = JSON.stringify(appState.vendors);
+                const newStr = JSON.stringify(response.data);
+                if (currentStr !== newStr) {
+                    appState.vendors = response.data;
+                    renderWorkspace();
+                    if (document.getElementById("motherboard-view") && !document.getElementById("motherboard-view").classList.contains("hidden")) {
+                        renderMotherboardDashboard();
+                    }
+                    showToast("Workspace diperbarui secara real-time dari Serverless!", "info");
+                }
+            }
+        })
+        .catch(err => console.error("Silent Sync Error:", err));
 }
 
 function updatePresenceUI(userId, status) {

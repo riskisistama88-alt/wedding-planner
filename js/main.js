@@ -150,6 +150,27 @@ function switchTab(tabName) {
     setTabStyle(navLdrhub, tabName === "ldrhub");
     setTabStyle(navSuperadmin, tabName === "superadmin");
 
+    const mobWorkspace = document.getElementById("mob-nav-workspace");
+    const mobMotherboard = document.getElementById("mob-nav-motherboard");
+    const mobLdrhub = document.getElementById("mob-nav-ldrhub");
+    const mobSuperadmin = document.getElementById("mob-nav-superadmin");
+
+    const setMobTabStyle = (el, isActive) => {
+        if (!el) return;
+        if (isActive) {
+            el.classList.add("text-[#2997ff]");
+            el.classList.remove("text-white");
+        } else {
+            el.classList.remove("text-[#2997ff]");
+            el.classList.add("text-white");
+        }
+    };
+
+    setMobTabStyle(mobWorkspace, tabName === "workspace");
+    setMobTabStyle(mobMotherboard, tabName === "motherboard");
+    setMobTabStyle(mobLdrhub, tabName === "ldrhub");
+    setMobTabStyle(mobSuperadmin, tabName === "superadmin");
+
     // Explicitly enforce Superadmin menu item visibility based on active session role
     if (navSuperadmin) {
         if (appState.userRole === "super_admin") {
@@ -173,6 +194,36 @@ function switchTab(tabName) {
         if (superadminView) superadminView.classList.remove("hidden");
         renderSuperadminPanel();
     }
+}
+
+function toggleMobileMenu() {
+    const overlay = document.getElementById("mobile-nav-overlay");
+    if (!overlay) return;
+    overlay.classList.toggle("hidden");
+    
+    // Sync email and badge in mobile overlay
+    if (!overlay.classList.contains("hidden")) {
+        const email = document.getElementById("display-email").innerText;
+        const badge = document.getElementById("user-badge").innerText;
+        
+        document.getElementById("mob-display-email").innerText = email;
+        document.getElementById("mob-user-badge").innerText = badge;
+        
+        // Handle Superadmin Panel link visibility in mobile nav
+        const mobNavSuperadmin = document.getElementById("mob-nav-superadmin");
+        if (mobNavSuperadmin) {
+            if (appState.userRole === "super_admin") {
+                mobNavSuperadmin.classList.remove("hidden");
+            } else {
+                mobNavSuperadmin.classList.add("hidden");
+            }
+        }
+    }
+}
+
+function mobileSwitchTab(tabName) {
+    switchTab(tabName);
+    toggleMobileMenu();
 }
 
 let presenceInterval = null;

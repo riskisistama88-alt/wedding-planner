@@ -61,10 +61,32 @@ function renderMotherboardDashboard() {
 }
 
 function exportToPDF() {
+    const element = document.getElementById("motherboard-view");
+    if (!element) {
+        showToast("Halaman motherboard data tidak ditemukan!", "error");
+        return;
+    }
+
     showToast("Mengekspor Laporan LDR Motherboard ke format PDF...", "info");
-    setTimeout(() => {
-        showToast("Laporan LDR Motherboard berhasil diunduh!", "success");
-    }, 1500);
+
+    // Configure options for html2pdf
+    const opt = {
+        margin:       [0.4, 0.4, 0.4, 0.4],
+        filename:     `Laporan_AURA_LDR_Motherboard_${appState.weddingId || 'Export'}.pdf`,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true, logging: false },
+        jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+    };
+
+    // Run html2pdf conversion
+    html2pdf().set(opt).from(element).save()
+        .then(() => {
+            showToast("Laporan LDR Motherboard berhasil diunduh!", "success");
+        })
+        .catch(err => {
+            console.error("PDF Export error:", err);
+            showToast("Gagal mengekspor laporan ke PDF. Silakan coba lagi.", "error");
+        });
 }
 
 function updateSyncBadge() {

@@ -665,6 +665,38 @@ function saveGeminiApiKey() {
     }
 }
 
+function showGeminiComparisonPanel() {
+    const panel = document.getElementById("gemini-comparison-panel");
+    const warningBox = document.getElementById("gemini-warning-box");
+    const loadingBox = document.getElementById("gemini-loading-box");
+    const resultBox = document.getElementById("gemini-analysis-result");
+    
+    if (!panel) return;
+    
+    panel.classList.remove("hidden");
+    
+    // Update dynamic text in panel header
+    const prepCatSpan = document.getElementById("gemini-prep-category");
+    if (prepCatSpan) prepCatSpan.innerText = appState.activeCategory;
+    
+    if (!appState.geminiApiKey || appState.geminiApiKey === "") {
+        if (warningBox) warningBox.classList.remove("hidden");
+        if (loadingBox) loadingBox.classList.add("hidden");
+        if (resultBox) resultBox.classList.add("hidden");
+    } else {
+        if (warningBox) warningBox.classList.add("hidden");
+        if (loadingBox) loadingBox.classList.remove("hidden");
+        if (resultBox) resultBox.classList.add("hidden");
+        
+        triggerGeminiAnalysis();
+    }
+}
+
+function hideGeminiComparisonPanel() {
+    const panel = document.getElementById("gemini-comparison-panel");
+    if (panel) panel.classList.add("hidden");
+}
+
 function triggerGeminiAnalysis() {
     if (!appState.geminiApiKey) {
         showToast("Gemini API Key belum dikonfigurasi! Buka menu 'Setup GAS & AI' untuk menyimpannya.", "error");
@@ -677,13 +709,11 @@ function triggerGeminiAnalysis() {
         return;
     }
 
-    const btn = document.getElementById("btn-gemini-analyze");
-    const resultDiv = document.getElementById("gemini-analysis-result");
-
-    if (btn) {
-        btn.disabled = true;
-        btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin mr-1.5"></i> Menganalisis...`;
-    }
+    const loadingBox = document.getElementById("gemini-loading-box");
+    const resultBox = document.getElementById("gemini-analysis-result");
+    
+    if (loadingBox) loadingBox.classList.remove("hidden");
+    if (resultBox) resultBox.classList.add("hidden");
 
     let vendorListText = "";
     categoryVendors.forEach((v, index) => {
@@ -714,30 +744,35 @@ Jawab dalam Bahasa Indonesia secara sopan, ramah, dan profesional. Gunakan forma
     })
     .then(res => res.json())
     .then(data => {
+        if (loadingBox) loadingBox.classList.add("hidden");
+        
         if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts[0]) {
             let resultText = data.candidates[0].content.parts[0].text;
             
-            // Simple markdown parser for bold styling
+            // Simple markdown parser for formatting
             resultText = resultText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
             resultText = resultText.replace(/\*(.*?)\*/g, '<em>$1</em>');
             
-            if (resultDiv) {
-                resultDiv.innerHTML = resultText;
-                resultDiv.classList.remove("hidden");
+            if (resultBox) {
+                resultBox.innerHTML = resultText;
+                resultBox.classList.remove("hidden");
             }
             showToast("Komparasi Gemini AI berhasil dimuat!", "success");
         } else {
             showToast("Respons API tidak valid. Periksa kuota atau status kunci API Anda.", "error");
+            if (resultBox) {
+                resultBox.innerHTML = `<span class="text-rose-600 font-semibold"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Gagal Memuat Komparasi:</span> Respons API tidak valid. Silakan periksa status kuota/kunci API Anda.`;
+                resultBox.classList.remove("hidden");
+            }
         }
     })
     .catch(err => {
         console.error(err);
+        if (loadingBox) loadingBox.classList.add("hidden");
         showToast("Gagal memanggil Gemini API. Periksa koneksi atau validitas API Key Anda.", "error");
-    })
-    .finally(() => {
-        if (btn) {
-            btn.disabled = false;
-            btn.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles text-[10px]"></i> <span>Analisis Sekarang</span>`;
+        if (resultBox) {
+            resultBox.innerHTML = `<span class="text-rose-600 font-semibold"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Koneksi Gagal:</span> Gagal menghubungi API. Silakan periksa koneksi internet Anda atau validitas API Key.`;
+            resultBox.classList.remove("hidden");
         }
     });
 }

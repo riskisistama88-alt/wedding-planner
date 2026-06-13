@@ -277,24 +277,62 @@
                 </div>
                 
                 <!-- Gemini AI Analysis Section -->
-                <div id="gemini-ai-widget" class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-[18px] p-5 mb-6 hidden">
+                <div id="gemini-ai-widget" class="bg-[#edf3ff]/50 border border-[#d2e3fc] rounded-[18px] p-5 mb-6 hidden space-y-4">
+                    <!-- Main Suggestion Bar -->
                     <div class="flex items-center justify-between flex-wrap gap-4">
-                        <div class="flex items-center space-x-3">
-                            <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-600 flex items-center justify-center text-white shadow-md">
-                                <i class="fa-solid fa-wand-magic-sparkles text-sm animate-pulse"></i>
+                        <div class="flex items-center space-x-3.5">
+                            <div class="w-[52px] h-[52px] rounded-[14px] bg-[#1d61d6] flex items-center justify-center text-white shadow-sm shrink-0">
+                                <i class="fa-solid fa-wand-magic-sparkles text-xl"></i>
                             </div>
                             <div>
-                                <h4 class="font-bold text-sm text-indigo-950">Analisis Komparasi Gemini AI</h4>
-                                <p class="text-xs text-indigo-800">Dapatkan rekomendasi & komparasi otomatis untuk kategori <span id="gemini-active-category" class="font-bold">Venue</span></p>
+                                <div class="flex items-center flex-wrap gap-2">
+                                    <h4 class="font-bold text-sm text-[#1d1d1f]">Gemini AI Model 2.5 Active</h4>
+                                    <span class="bg-[#ece8ff] text-[#6b5cd4] text-[9px] px-2 py-0.5 rounded-[5px] font-semibold tracking-wide">Saran Instan</span>
+                                </div>
+                                <p class="text-xs text-[#5f6368] mt-1.5" id="gemini-widget-subtext">Ada lebih dari satu opsi di kategori <span id="gemini-active-category" class="font-bold">Venue</span>. Jalankan komparasi AI sekarang.</p>
                             </div>
                         </div>
-                        <button onclick="triggerGeminiAnalysis()" id="btn-gemini-analyze" class="active-scale bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-full text-xs px-5 py-2 font-semibold shadow-sm flex items-center space-x-1.5 transition">
-                            <i class="fa-solid fa-wand-magic-sparkles text-[10px]"></i>
-                            <span>Analisis Sekarang</span>
+                        <button onclick="showGeminiComparisonPanel()" id="btn-gemini-analyze" class="active-scale bg-[#0a60eb] hover:bg-[#0b54cd] text-white rounded-[10px] text-xs px-5 py-2.5 font-bold transition flex items-center space-x-1.5 shadow-sm">
+                            <span>Bandingkan Spesifikasi via Gemini</span>
                         </button>
                     </div>
-                    <div id="gemini-analysis-result" class="mt-4 text-xs text-indigo-900 leading-relaxed hidden bg-white/60 border border-indigo-100/50 p-4 rounded-[11px] backdrop-blur-sm whitespace-pre-line">
-                        <!-- Result text formatted nicely -->
+
+                    <!-- AI Comparison Panel (Dropdown Card) -->
+                    <div id="gemini-comparison-panel" class="hidden border-t border-[#d2e3fc] pt-5 mt-4 space-y-4">
+                        <div class="flex items-center justify-between">
+                            <h5 class="text-xs font-bold text-[#1d1d1f] flex items-center space-x-2">
+                                <i class="fa-solid fa-wand-magic-sparkles text-[#1d61d6]"></i>
+                                <span>AI Menyiapkan Perbandingan <span id="gemini-prep-category">Venue</span>...</span>
+                            </h5>
+                            <button onclick="hideGeminiComparisonPanel()" class="w-6 h-6 rounded-full hover:bg-gray-200/50 flex items-center justify-center text-gray-500 transition">
+                                <i class="fa-solid fa-xmark text-sm"></i>
+                            </button>
+                        </div>
+
+                        <!-- API Key Warning State (Shown if no API Key configured) -->
+                        <div id="gemini-warning-box" class="hidden bg-[#fffbf0] border border-[#ffeebf] rounded-[11px] p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div class="flex items-start space-x-2.5">
+                                <i class="fa-solid fa-triangle-exclamation text-[#b25b00] mt-0.5"></i>
+                                <div>
+                                    <h6 class="font-bold text-xs text-[#8a5d00]">API Key Gemini Belum Ada</h6>
+                                    <p class="text-[11px] text-[#b88c14] mt-0.5">Untuk membandingkan opsi vendor menggunakan Gemini AI, masukkan API Key Anda terlebih dahulu.</p>
+                                </div>
+                            </div>
+                            <button onclick="toggleDeveloperConsole(); hideGeminiComparisonPanel();" class="bg-[#b25b00] hover:bg-[#994e00] text-white rounded-full text-xs px-5 py-2.5 font-semibold transition active-scale shrink-0">
+                                Masukkan API Key
+                            </button>
+                        </div>
+
+                        <!-- Loading State (Shown when executing analysis) -->
+                        <div id="gemini-loading-box" class="hidden py-8 text-center text-xs text-[#7a7a7a] space-y-3 bg-white/40 border border-[#e0e0e0] rounded-[11px] backdrop-blur-sm">
+                            <i class="fa-solid fa-spinner animate-spin text-lg text-[#0a60eb]"></i>
+                            <p class="font-medium animate-pulse">Sedang memanggil Gemini AI untuk merumuskan perbandingan...</p>
+                        </div>
+
+                        <!-- Result Box (Shown when comparison is ready) -->
+                        <div id="gemini-analysis-result" class="hidden text-xs text-indigo-950 leading-relaxed bg-[#f8faff] border border-indigo-100/50 p-5 rounded-[12px] whitespace-pre-line overflow-y-auto max-h-[350px]">
+                            <!-- Result text formatted nicely -->
+                        </div>
                     </div>
                 </div>
 

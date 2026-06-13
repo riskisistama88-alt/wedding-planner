@@ -393,14 +393,33 @@ function showToast(message, type = "success") {
 
 function updateGeminiWidget() {
     const widget = document.getElementById("gemini-ai-widget");
-    const categorySpan = document.getElementById("gemini-active-category");
-    
     if (!widget) return;
 
     if (appState.activeCategory === "All") {
         widget.classList.add("hidden");
-    } else {
+        return;
+    }
+
+    const categoryVendors = appState.vendors.filter(v => v.category === appState.activeCategory);
+    
+    // Hide panel by default on tab change so it doesn't stay open with old results
+    const panel = document.getElementById("gemini-comparison-panel");
+    if (panel) panel.classList.add("hidden");
+
+    if (categoryVendors.length >= 2) {
         widget.classList.remove("hidden");
-        if (categorySpan) categorySpan.innerText = appState.activeCategory;
+        
+        const subtext = document.getElementById("gemini-widget-subtext");
+        if (subtext) {
+            subtext.innerHTML = `Ada lebih dari satu opsi di kategori <strong>${appState.activeCategory}</strong>. Jalankan komparasi AI sekarang.`;
+        }
+        
+        const catSpan = document.getElementById("gemini-active-category");
+        if (catSpan) catSpan.innerText = appState.activeCategory;
+        
+        const prepCatSpan = document.getElementById("gemini-prep-category");
+        if (prepCatSpan) prepCatSpan.innerText = appState.activeCategory;
+    } else {
+        widget.classList.add("hidden");
     }
 }

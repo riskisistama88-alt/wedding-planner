@@ -1,0 +1,506 @@
+window.onload = function() {
+    // Load projects list first
+    const savedProjects = localStorage.getItem("aura_projects_list");
+    if (savedProjects) {
+        try {
+            appState.projects = JSON.parse(savedProjects);
+        } catch(e) {
+            appState.projects = [...defaultProjectsList];
+        }
+    } else {
+        appState.projects = [...defaultProjectsList];
+        localStorage.setItem("aura_projects_list", JSON.stringify(appState.projects));
+    }
+
+    // Check Session in LocalStorage
+    const localSession = localStorage.getItem("aura_session");
+    const savedGasUrl = localStorage.getItem("aura_gas_url");
+    
+    if (savedGasUrl) {
+        appState.gasApiUrl = savedGasUrl;
+        document.getElementById("gas-deployed-url").value = savedGasUrl;
+    }
+
+    if (localSession) {
+        const parsed = JSON.parse(localSession);
+        appState.isLoggedIn = true;
+        appState.userEmail = parsed.email;
+        appState.userRole = parsed.role;
+        appState.weddingId = parsed.weddingId || "WD-AURA-002";
+        document.getElementById("auth-portal").classList.add("hidden");
+        initializeWorkspace();
+    } else {
+        document.getElementById("auth-portal").classList.remove("hidden");
+    }
+};
+
+function initializeWorkspace() {
+    // Restore session
+    const localSession = localStorage.getItem("aura_session");
+    if (localSession) {
+        const parsed = JSON.parse(localSession);
+        appState.userEmail = parsed.email;
+        appState.userRole = parsed.role;
+        appState.weddingId = parsed.weddingId || "WD-AURA-002";
+    }
+
+    // Enforce Superadmin setup or Client Project setup
+    if (appState.userRole === "super_admin") {
+        document.getElementById("user-badge").innerText = "Superadmin";
+        document.getElementById("display-email").innerText = appState.userEmail;
+        document.getElementById("wedding-title").innerText = "AURA - Superadmin Console";
+        
+        // Hide normal views, show Superadmin view
+        switchTab("superadmin");
+        
+        // Initialize global switcher dropdown
+        renderSuperadminGlobalSwitcher();
+        
+        startPresenceSimulation();
+        return;
+    }
+
+    // Regular Client Workspace load
+    const currentProject = appState.projects.find(p => p.id === appState.weddingId);
+    if (!currentProject) {
+        // If the project was deleted or doesn't exist, log out
+        handleLogout();
+        return;
+    }
+
+    // Hide superadmin nav and switcher for regular client
+    document.getElementById("nav-superadmin").classList.add("hidden");
+    document.getElementById("superadmin-project-selector").classList.add("hidden");
+
+    document.getElementById("display-email").innerText = appState.userEmail;
+    document.getElementById("user-badge").innerText = getActiveRoleLabel();
+    document.getElementById("wedding-title").innerText = currentProject.title;
+    
+    // Set gasApiUrl
+    appState.gasApiUrl = currentProject.gasApiUrl;
+    updateSyncBadge();
+
+    // Load data for this specific project
+    loadProjectData(appState.weddingId);
+
+    // Render workspace
+    renderWorkspace();
+    
+    // Switch to workspace tab for regular client
+    switchTab("workspace");
+    
+    // Start simulation
+    startPresenceSimulation();
+}
+
+function switchTab(tabName) {
+    const workspaceView = document.getElementById("workspace-view");
+    const motherboardView = document.getElementById("motherboard-view");
+    const ldrhubView = document.getElementById("ldrhub-view");
+    const superadminView = document.getElementById("superadmin-view");
+    const navWorkspace = document.getElementById("nav-workspace");
+    const navMotherboard = document.getElementById("nav-motherboard");
+    const navLdrhub = document.getElementById("nav-ldrhub");
+    const navSuperadmin = document.getElementById("nav-superadmin");
+
+    // Hide all
+    if (workspaceView) workspaceView.classList.add("hidden");
+    if (motherboardView) motherboardView.classList.add("hidden");
+    if (ldrhubView) ldrhubView.classList.add("hidden");
+    if (superadminView) superadminView.classList.add("hidden");
+
+    // Reset active classes
+    if (navWorkspace) navWorkspace.className = "hover:text-white transition-colors text-[#cccccc]";
+    if (navMotherboard) navMotherboard.className = "hover:text-white transition-colors text-[#cccccc]";
+    if (navLdrhub) navLdrhub.className = "hover:text-white transition-colors text-[#cccccc]";
+    if (navSuperadmin) navSuperadmin.className = "hover:text-white transition-colors text-[#cccccc]";
+
+    if (tabName === "workspace") {
+        if (workspaceView) workspaceView.classList.remove("hidden");
+        if (navWorkspace) navWorkspace.className = "text-white font-semibold transition-colors";
+        renderWorkspace();
+    } else if (tabName === "motherboard") {
+        if (motherboardView) motherboardView.classList.remove("hidden");
+        if (navMotherboard) navMotherboard.className = "text-white font-semibold transition-colors";
+        renderMotherboardDashboard();
+    } else if (tabName === "ldrhub") {
+        if (ldrhubView) ldrhubView.classList.remove("hidden");
+        if (navLdrhub) navLdrhub.className = "text-white font-semibold transition-colors";
+        renderLdrHub();
+    } else if (tabName === "superadmin") {
+        if (superadminView) superadminView.classList.remove("hidden");
+        if (navSuperadmin) navSuperadmin.className = "text-white font-semibold transition-colors";
+        renderSuperadminPanel();
+    }
+}
+
+let presenceInterval = null;
+function startPresenceSimulation() {
+    if (presenceInterval) clearInterval(presenceInterval);
+    
+    const activities = [
+        { user: "tama.decider@sg-corp.com", name: "Tama", text: "sedang meninjau anggaran katering..." },
+        { user: "wp_planner@aurawedding.com", name: "Aura WO", text: "memperbarui susunan acara (rundown) Lamaran..." },
+        { user: "indah.adr@gmail.com", name: "Indah", text: "sedang mencari alternatif foto dekorasi earth tone..." },
+        { user: "tama.decider@sg-corp.com", name: "Tama", text: "menyetujui alur kerja WO Dienisa MC..." },
+        { user: "wp_planner@aurawedding.com", name: "Aura WO", text: "menambahkan catatan teknis pada Aula Badarusamsi..." }
+    ];
+
+    presenceInterval = setInterval(() => {
+        if (!appState.isLoggedIn) return;
+        
+        const statuses = ["Online", "Away", "Busy"];
+        const indahStatus = statuses[Math.floor(Math.random() * statuses.length)];
+        const tamaStatus = statuses[Math.floor(Math.random() * statuses.length)];
+        const woStatus = statuses[Math.floor(Math.random() * statuses.length)];
+
+        updatePresenceUI("indah", indahStatus);
+        updatePresenceUI("tama", tamaStatus);
+        updatePresenceUI("wo", woStatus);
+
+        const randomAct = activities[Math.floor(Math.random() * activities.length)];
+        showToast(`${randomAct.name}: ${randomAct.text}`, "info");
+
+        const simulatedLog = {
+            tanggal: new Date(),
+            user: randomAct.user,
+            aktivitas: "LIVE_COLLAB",
+            detail: `${randomAct.name} ${randomAct.text}`
+        };
+        
+        appState.logs.unshift(simulatedLog);
+        renderLogs();
+    }, 60000); // Trigger every 60 seconds
+}
+
+function updatePresenceUI(userId, status) {
+    const indicator = document.getElementById(`user-status-${userId}`);
+    if (!indicator) return;
+    
+    if (status === "Online") {
+        indicator.className = "w-2 h-2 rounded-full bg-emerald-500 animate-pulse";
+        indicator.title = "Sedang Aktif";
+    } else if (status === "Away") {
+        indicator.className = "w-2 h-2 rounded-full bg-amber-400";
+        indicator.title = "Away";
+    } else {
+        indicator.className = "w-2 h-2 rounded-full bg-gray-300";
+        indicator.title = "Offline";
+    }
+}
+
+function toggleActivityLog() {
+    const drawer = document.getElementById("activity-log-drawer");
+    const container = document.getElementById("drawer-container");
+    if (!drawer || !container) return;
+    
+    if (drawer.classList.contains("hidden")) {
+        drawer.classList.remove("hidden");
+        setTimeout(() => {
+            container.classList.remove("translate-x-full");
+        }, 10);
+    } else {
+        container.classList.add("translate-x-full");
+        setTimeout(() => {
+            drawer.classList.add("hidden");
+        }, 300);
+    }
+}
+
+function renderLogs() {
+    const container = document.getElementById("activity-logs-container");
+    if (!container) return;
+    container.innerHTML = "";
+
+    if (appState.logs.length === 0) {
+        container.innerHTML = `<div class="text-center py-8 text-xs text-[#7a7a7a]">Belum ada riwayat aktivitas log.</div>`;
+        return;
+    }
+
+    appState.logs.forEach(log => {
+        const row = document.createElement("div");
+        row.className = "p-4 rounded-[11px] bg-[#f5f5f7] border border-[#e0e0e0] text-xs space-y-1.5";
+        
+        let icon = `<i class="fa-solid fa-file-pen text-blue-500"></i>`;
+        if (log.aktivitas === "STATUS_UPDATE") icon = `<i class="fa-solid fa-arrows-spin text-purple-500"></i>`;
+        else if (log.aktivitas === "DELETE_VND") icon = `<i class="fa-solid fa-trash-can text-rose-500"></i>`;
+        
+        const timeString = new Date(log.tanggal).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+        const dateString = new Date(log.tanggal).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+
+        row.innerHTML = `
+            <div class="flex items-center justify-between font-semibold">
+                <span class="flex items-center space-x-1.5">
+                    ${icon}
+                    <span class="text-[#1d1d1f]">${log.aktivitas}</span>
+                </span>
+                <span class="text-[10px] text-[#7a7a7a]">${dateString}, ${timeString}</span>
+            </div>
+            <p class="text-[#1d1d1f]">${log.detail}</p>
+            <span class="text-[10px] text-[#7a7a7a] block font-mono text-right">&mdash; ${log.user}</span>
+        `;
+        container.appendChild(row);
+    });
+}
+
+function toggleDeveloperConsole() {
+    const modal = document.getElementById("dev-console-modal");
+    if (modal) modal.classList.toggle("hidden");
+}
+
+function copyGasCode() {
+    const codeBlock = document.getElementById("gas-code-block");
+    if (!codeBlock) return;
+    
+    const fullGasCode = `/*
+  =============================================================================
+  AURA INTEGRATED GOOGLE APPS SCRIPT (GAS) WEB APP ENGINE
+  =============================================================================
+  Salin kode ini ke editor Extensions > Apps Script pada Google Sheets Anda.
+  Instalasi setupDatabase() otomatis akan membuat 3 Sheets yang dibutuhkan.
+  Gunakan Type: Web App, Execute as: Me, Access: Anyone untuk deployment.
+*/
+
+const SPREADSHEET_ID = "GANTI_DENGAN_SPREADSHEET_ID_ANDA";
+
+function doGet(e) {
+  const action = e.parameter.action;
+  const weddingId = e.parameter.wedding_id;
+  
+  if (action === "getVendorCatalog") {
+    return handleGetVendorCatalog(weddingId);
+  } else if (action === "getBudgetSummary") {
+    return handleGetBudgetSummary(weddingId);
+  }
+  
+  return ContentService.createTextOutput(JSON.stringify({success: false, message: "Invalid GET Action"}))
+                       .setMimeType(ContentService.MimeType.JSON);
+}
+
+function doPost(e) {
+  const payload = JSON.parse(e.postData.contents);
+  const action = payload.action;
+  
+  if (action === "login") {
+    return handleLogin(payload.email, payload.token);
+  } else if (action === "addVendor") {
+    return handleAddVendor(payload);
+  } else if (action === "updateVendorStatus") {
+    return handleUpdateVendorStatus(payload);
+  } else if (action === "deleteVendor") {
+    return handleDeleteVendor(payload);
+  }
+  
+  return ContentService.createTextOutput(JSON.stringify({success: false, message: "Invalid POST Action"}))
+                       .setMimeType(ContentService.MimeType.JSON);
+}
+
+function handleGetVendorCatalog(weddingId) {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheet = ss.getSheetByName("Sheet_Utama");
+  const data = sheet.getDataRange().getValues();
+  
+  const vendors = [];
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][2] === "VendorCatalog" && data[i][3] !== "Deleted") {
+      const payload = JSON.parse(data[i][4]);
+      if (payload.wedding_id === weddingId) {
+        vendors.push(payload);
+      }
+    }
+  }
+  
+  return ContentService.createTextOutput(JSON.stringify({success: true, data: vendors}))
+                       .setMimeType(ContentService.MimeType.JSON);
+}
+
+function handleAddVendor(payload) {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheetUtama = ss.getSheetByName("Sheet_Utama");
+  const sheetLog = ss.getSheetByName("Sheet_Log");
+  const sheetRekap = ss.getSheetByName("Sheet_Rekap");
+  
+  const vendorId = "VND-" + Math.floor(1000 + Math.random() * 9000);
+  const newVendor = {
+    vendor_id: vendorId,
+    wedding_id: payload.wedding_id,
+    category: payload.category,
+    vendor_name: payload.vendor_name,
+    package_name: payload.package_name,
+    price: payload.price,
+    notes: payload.notes,
+    file_url: payload.file_url,
+    status: "Draft"
+  };
+  
+  sheetUtama.appendRow([
+    new Date(),
+    vendorId,
+    "VendorCatalog",
+    "Draft",
+    JSON.stringify(newVendor),
+    payload.file_url,
+    payload.user_email,
+    new Date()
+  ]);
+  
+  sheetRekap.appendRow([
+    vendorId,
+    payload.category,
+    payload.vendor_name,
+    payload.package_name,
+    payload.price,
+    payload.notes,
+    "Draft"
+  ]);
+  
+  sheetLog.appendRow([
+    new Date(),
+    payload.user_email,
+    "CREATE_VND",
+    "Mengusulkan vendor baru: " + payload.vendor_name
+  ]);
+  
+  return ContentService.createTextOutput(JSON.stringify({success: true, vendor_id: vendorId}))
+                       .setMimeType(ContentService.MimeType.JSON);
+}
+
+function handleUpdateVendorStatus(payload) {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheetUtama = ss.getSheetByName("Sheet_Utama");
+  const sheetRekap = ss.getSheetByName("Sheet_Rekap");
+  const sheetLog = ss.getSheetByName("Sheet_Log");
+  
+  const rangeUtama = sheetUtama.getDataRange();
+  const valuesUtama = rangeUtama.getValues();
+  for (let i = 1; i < valuesUtama.length; i++) {
+    if (valuesUtama[i][1] === payload.vendor_id) {
+      sheetUtama.getRange(i + 1, 4).setValue(payload.new_status);
+      sheetUtama.getRange(i + 1, 8).setValue(new Date());
+      
+      const details = JSON.parse(valuesUtama[i][4]);
+      details.status = payload.new_status;
+      sheetUtama.getRange(i + 1, 5).setValue(JSON.stringify(details));
+      break;
+    }
+  }
+  
+  const rangeRekap = sheetRekap.getDataRange();
+  const valuesRekap = rangeRekap.getValues();
+  for (let i = 6; i < valuesRekap.length; i++) {
+    if (valuesRekap[i][0] === payload.vendor_id) {
+      sheetRekap.getRange(i + 1, 7).setValue(payload.new_status);
+      break;
+    }
+  }
+  
+  sheetLog.appendRow([
+    new Date(),
+    payload.user_email,
+    "STATUS_UPDATE",
+    "Mengubah status " + payload.vendor_id + " menjadi " + payload.new_status
+  ]);
+  
+  return ContentService.createTextOutput(JSON.stringify({success: true}))
+                       .setMimeType(ContentService.MimeType.JSON);
+}
+
+function handleDeleteVendor(payload) {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheetUtama = ss.getSheetByName("Sheet_Utama");
+  const sheetRekap = ss.getSheetByName("Sheet_Rekap");
+  const sheetLog = ss.getSheetByName("Sheet_Log");
+  
+  const rangeUtama = sheetUtama.getDataRange();
+  const valuesUtama = rangeUtama.getValues();
+  for (let i = 1; i < valuesUtama.length; i++) {
+    if (valuesUtama[i][1] === payload.vendor_id) {
+      sheetUtama.getRange(i + 1, 4).setValue("Deleted");
+      break;
+    }
+  }
+  
+  const rangeRekap = sheetRekap.getDataRange();
+  const valuesRekap = rangeRekap.getValues();
+  for (let i = 6; i < valuesRekap.length; i++) {
+    if (valuesRekap[i][0] === payload.vendor_id) {
+      sheetRekap.deleteRow(i + 1);
+      break;
+    }
+  }
+  
+  sheetLog.appendRow([
+    new Date(),
+    payload.user_email,
+    "DELETE_VND",
+    "Menghapus vendor " + payload.vendor_id
+  ]);
+  
+  return ContentService.createTextOutput(JSON.stringify({success: true}))
+                       .setMimeType(ContentService.MimeType.JSON);
+}
+`;
+    
+    const dummyTextArea = document.createElement("textarea");
+    dummyTextArea.value = fullGasCode;
+    document.body.appendChild(dummyTextArea);
+    dummyTextArea.select();
+    document.execCommand('copy');
+    document.body.removeChild(dummyTextArea);
+    
+    showToast("Kode Google Apps Script berhasil disalin!", "success");
+}
+
+function saveGasUrl() {
+    const url = document.getElementById("gas-deployed-url").value;
+    if (url) {
+        appState.gasApiUrl = url;
+        localStorage.setItem("aura_gas_url", url);
+        showToast("Berhasil Menghubungkan Backend GAS secara Live!", "success");
+        fetchDataFromGas();
+        toggleDeveloperConsole();
+    } else {
+        showToast("Harap masukkan URL Web App yang valid.", "error");
+    }
+}
+
+function fetchDataFromGas() {
+    if (!appState.gasApiUrl) return;
+
+    showToast("Menghubungkan & Membaca Motherboard Live...", "info");
+    
+    fetch(`${appState.gasApiUrl}?action=getVendorCatalog&wedding_id=${appState.weddingId}`)
+        .then(res => res.json())
+        .then(response => {
+            if (response.success && response.data) {
+                appState.vendors = response.data;
+                renderWorkspace();
+                showToast("Sinkronisasi Sukses!", "success");
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            showToast("Gagal mengambil data Live, kembali ke Mode Simulasi.", "error");
+            appState.vendors = [...defaultVendorList];
+            renderWorkspace();
+        });
+}
+
+function postToGas(payload) {
+    if (!appState.gasApiUrl) return;
+    
+    fetch(appState.gasApiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    })
+    .then(res => res.json())
+    .then(res => {
+        if(res.success) {
+            showToast("Database Terpusat Sukses Disinkronkan!", "success");
+        }
+    })
+    .catch(err => {
+        console.error("GAS Sync Error: ", err);
+    });
+}

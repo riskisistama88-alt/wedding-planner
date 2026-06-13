@@ -1,0 +1,1209 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AURA — Interactive LDR Wedding Planner &amp; Budget Motherboard</title>
+    <!-- Google Fonts: Inter as SF Pro Display/Text Substitute -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS for functional utility classes -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for crisp minimalist line icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- Global Navigation: Pinned Ultra-thin 44px Black Bar -->
+    <nav class="h-[44px] bg-[#000000] text-white flex items-center justify-between px-6 z-50 fixed top-0 left-0 right-0 text-[12px] tracking-tight">
+        <div class="flex items-center space-x-6">
+            <span class="font-semibold text-white apple-tight-title flex items-center space-x-2">
+                <i class="fa-solid fa-ring text-[14px]"></i>
+                <span>AURA <span class="font-light text-[#7a7a7a]">LDR WEDDING</span></span>
+            </span>
+            <div class="hidden md:flex items-center space-x-6 text-[#cccccc]">
+                <a href="#dashboard" id="nav-workspace" onclick="switchTab('workspace')" class="text-white font-semibold transition-colors">Workspace</a>
+                <a href="#motherboard" id="nav-motherboard" onclick="switchTab('motherboard')" class="hover:text-white transition-colors">Motherboard Data</a>
+                <a href="#ldrhub" id="nav-ldrhub" onclick="switchTab('ldrhub')" class="hover:text-white transition-colors">LDR Hub</a>
+                <a href="#superadmin" id="nav-superadmin" onclick="switchTab('superadmin')" class="hover:text-white transition-colors hidden">Superadmin Panel</a>
+                <span class="text-[#333333]">|</span>
+                <span class="text-[#2997ff] font-medium"><i class="fa-solid fa-cloud-sun mr-1"></i> Mode Kolaborasi</span>
+            </div>
+        </div>
+        <div class="flex items-center space-x-4">
+            <select id="superadmin-project-selector" onchange="superadminSwitchProject(this.value)" class="bg-[#1d1d1f] text-white border border-[#333333] rounded-[8px] text-[11px] py-1 px-2 focus:outline-none hidden">
+                <!-- Loaded dynamically -->
+            </select>
+            <button onclick="toggleDeveloperConsole()" class="active-scale text-[#2997ff] hover:text-white transition-colors text-[11px] bg-[#1d1d1f] py-1 px-3 rounded-[8px] border border-[#333333]">
+                <i class="fa-solid fa-code mr-1"></i> GAS Setup
+            </button>
+            <div id="user-profile" class="flex items-center space-x-2">
+                <span id="user-badge" class="bg-[#272729] text-white px-2 py-0.5 rounded-[5px] text-[10px]">Decider</span>
+                <span class="text-xs text-[#cccccc]" id="display-email">indah.adr@gmail.com</span>
+                <button onclick="handleLogout()" class="text-red-400 hover:text-red-300 ml-2"><i class="fa-solid fa-power-off"></i></button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Auth Gateway Portal (Shown when not logged in) -->
+    <div id="auth-portal" class="fixed inset-0 bg-[#000000] z-50 flex items-center justify-center p-4">
+        <div class="w-full max-w-[440px] bg-[#1d1d1f] rounded-[18px] p-8 border border-[#272729] text-white">
+            <div class="text-center mb-8">
+                <div class="w-[64px] h-[64px] bg-[#272729] rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fa-solid fa-ring text-[#2997ff] text-2xl"></i>
+                </div>
+                <h1 class="text-3xl font-semibold apple-tight-title mb-2">AURA</h1>
+                <p class="text-sm text-[#7a7a7a]">Interactive LDR Wedding Planner &amp; Motherboard</p>
+            </div>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs text-[#7a7a7a] mb-1 uppercase tracking-wider">Email Anda</label>
+                    <input type="email" id="auth-email" placeholder="contoh: indah@gmail.com" class="w-full bg-[#272729] text-white rounded-[11px] px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#0071e3] transition">
+                </div>
+                <div>
+                    <label class="block text-xs text-[#7a7a7a] mb-1 uppercase tracking-wider">Wedding Token (Pre-shared PIN)</label>
+                    <input type="password" id="auth-token" placeholder="••••••••" class="w-full bg-[#272729] text-white rounded-[11px] px-4 py-3 text-sm tracking-widest focus:outline-none focus:ring-2 focus:ring-[#0071e3] transition">
+                    <div class="mt-2 text-right">
+                        <button onclick="useDemoSession()" class="text-[#2997ff] text-xs hover:underline">Atau gunakan Sesi Demo Instan &rarr;</button>
+                    </div>
+                </div>
+                
+                <button id="btn-login" onclick="handleLogin()" class="w-full bg-[#0066cc] text-white rounded-full py-3 mt-4 font-medium active-scale hover:bg-[#0071e3] transition flex items-center justify-center space-x-2 text-sm">
+                    <span>Masuk ke Dashboard</span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+            
+            <div class="mt-8 pt-6 border-t border-[#272729] text-center text-xs text-[#7a7a7a]">
+                <p class="mb-1"><i class="fa-solid fa-shield-halved mr-1"></i> Enkripsi Token Aman Terverifikasi</p>
+                <p>Didukung oleh Arsitektur Serverless Google Workspace</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Frosted Sub-Navigation: Sticky under 44px top nav -->
+    <header class="h-[52px] frosted-glass border-b border-[#e0e0e0] flex items-center justify-between px-6 z-40 fixed top-[44px] left-0 right-0 text-[#1d1d1f]">
+        <div class="flex items-center space-x-4">
+            <span class="font-semibold text-[17px] apple-tight-title" id="wedding-title">Indah &amp; Tama's Wedding</span>
+            <span id="sync-status-badge" class="bg-amber-50 border border-amber-200 text-amber-700 px-2.5 py-0.5 rounded-[9999px] text-[12px] hidden sm:inline-flex items-center space-x-1">
+                <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                <span>Simulasi Lokal</span>
+            </span>
+        </div>
+        
+        <!-- Live Quick Budget Tracker inside Sub-Nav -->
+        <div class="flex items-center space-x-6 text-[14px]">
+            <div class="hidden lg:flex items-center space-x-6">
+                <div>
+                    <span class="text-[11px] text-[#7a7a7a] uppercase block leading-none">Batas Anggaran</span>
+                    <span class="font-semibold cursor-pointer hover:text-[#0066cc] group transition-colors flex items-center" onclick="openEditBudgetModal()" title="Ubah Batas Anggaran">
+                        <span id="budget-limit-display">Rp350.000.000</span>
+                        <i class="fa-solid fa-pen text-[9px] text-gray-400 group-hover:text-[#0066cc] ml-1 transition-colors"></i>
+                    </span>
+                </div>
+                <div class="h-6 w-px bg-gray-300"></div>
+                <div>
+                    <span class="text-[11px] text-[#7a7a7a] uppercase block leading-none">Terpilih (Selected)</span>
+                    <span class="font-semibold text-[#0066cc]" id="budget-spent-display">Rp133.500.000</span>
+                </div>
+                <div class="h-6 w-px bg-gray-300"></div>
+                <div>
+                    <span class="text-[11px] text-[#7a7a7a] uppercase block leading-none">Sisa Dana</span>
+                    <span class="font-semibold" id="budget-remaining-display">Rp216.500.000</span>
+                </div>
+            </div>
+            
+            <!-- Desktop Activity Log Button -->
+            <button onclick="toggleActivityLog()" class="active-scale bg-white border border-[#e0e0e0] text-[#1d1d1f] rounded-full text-[13px] px-4 py-1.5 font-medium flex items-center space-x-1.5 hover:bg-[#f5f5f7] transition hidden md:flex">
+                <i class="fa-solid fa-clock-rotate-left text-[11px] text-[#7a7a7a]"></i>
+                <span>Log Aktivitas</span>
+            </button>
+            
+            <button onclick="openAddVendorModal()" class="active-scale bg-[#0066cc] text-white rounded-full text-[13px] px-5 py-1.5 font-medium flex items-center space-x-1.5 hover:bg-[#0071e3] transition">
+                <i class="fa-solid fa-plus text-[10px]"></i>
+                <span>Tambah Vendor</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Scrollable App Container -->
+    <main class="flex-1 pt-[116px] pb-[80px] px-4 md:px-8 max-w-[1440px] mx-auto w-full">
+        
+        <!-- Workspace View (Grid Layout) -->
+        <div id="workspace-view" class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <!-- Left Side Column: Control Center & Category Pills (Span 3) -->
+            <aside class="lg:col-span-3 space-y-6">
+                
+                <!-- Category Shortcuts - Apple Pill List style -->
+                <div class="bg-white rounded-[18px] p-5 border border-[#e0e0e0] space-y-3">
+                    <h3 class="text-xs font-semibold text-[#7a7a7a] uppercase tracking-wider mb-2">Kategori Vendor</h3>
+                    <div class="space-y-1.5" id="category-pills">
+                        <button onclick="filterCategory('All')" id="pill-All" class="w-full text-left px-4 py-2.5 rounded-[11px] text-[14px] font-medium flex items-center justify-between transition active-scale bg-[#0066cc] text-white">
+                            <span>Semua Kategori</span>
+                            <span class="text-xs bg-white/20 px-2 py-0.5 rounded-[5px]" id="count-all">0</span>
+                        </button>
+                        <!-- JavaScript will dynamically generate categories count -->
+                    </div>
+                </div>
+
+                <!-- Motherboard Live Health Progress Ring -->
+                <div class="bg-white rounded-[18px] p-5 border border-[#e0e0e0] text-center">
+                    <h3 class="text-xs font-semibold text-[#7a7a7a] uppercase tracking-wider text-left mb-4">Penggunaan Anggaran</h3>
+                    <div class="relative w-[150px] h-[150px] mx-auto mb-4 flex items-center justify-center">
+                        <!-- Dynamic Donut/Progress Chart Simulation -->
+                        <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                            <circle cx="50" cy="50" r="40" stroke="#f0f0f0" stroke-width="8" fill="transparent"/>
+                            <circle id="budget-progress-circle" cx="50" cy="50" r="40" stroke="#0066cc" stroke-width="8" stroke-dasharray="251.2" stroke-dashoffset="251.2" fill="transparent" class="transition-all duration-500"/>
+                        </svg>
+                        <div class="absolute text-center">
+                            <span id="budget-percentage" class="text-3xl font-semibold">0%</span>
+                            <span class="block text-[10px] text-[#7a7a7a] uppercase mt-0.5">Terpakai</span>
+                        </div>
+                    </div>
+                    <div id="budget-status-alert" class="bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs px-3 py-2 rounded-[11px] text-center">
+                        <i class="fa-solid fa-circle-check mr-1"></i> Pengeluaran Terkontrol Aman
+                    </div>
+                </div>
+
+                <!-- Collaborators Area -->
+                <div class="bg-white rounded-[18px] p-5 border border-[#e0e0e0] space-y-4">
+                    <h3 class="text-xs font-semibold text-[#7a7a7a] uppercase tracking-wider">Perencana Kolaborasi LDR</h3>
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-2">
+                                <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-xs font-bold text-blue-600">
+                                    ID
+                                </div>
+                                <div>
+                                    <span class="text-xs font-semibold block leading-none">Indah (Klien A)</span>
+                                    <span class="text-[10px] text-[#7a7a7a]">Bandung (Inisiator)</span>
+                                </div>
+                            </div>
+                            <span class="w-2 h-2 rounded-full bg-emerald-500" title="Online" id="user-status-indah"></span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-2">
+                                <div class="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-xs font-bold text-purple-600">
+                                    TM
+                                </div>
+                                <div>
+                                    <span class="text-xs font-semibold block leading-none">Tama (Klien B)</span>
+                                    <span class="text-[10px] text-[#7a7a7a]">Singapura (Decider)</span>
+                                </div>
+                            </div>
+                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" title="Sedang Aktif" id="user-status-tama"></span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-2">
+                                <div class="w-8 h-8 rounded-full bg-neutral-100 flex items-center justify-center text-xs font-bold text-neutral-600">
+                                    WP
+                                </div>
+                                <div>
+                                    <span class="text-xs font-semibold block leading-none">Aura WO (Admin)</span>
+                                    <span class="text-[10px] text-[#7a7a7a]">Jakarta (Planner)</span>
+                                </div>
+                            </div>
+                            <span class="w-2 h-2 rounded-full bg-amber-400" title="Away" id="user-status-wo"></span>
+                        </div>
+                    </div>
+                </div>
+                
+            </aside>
+
+            <!-- Right Side Column: Primary Vendor Workspace (Span 9) -->
+            <section class="lg:col-span-9 space-y-6">
+                
+                <!-- Workspace Filtering Info & Active Status Toggles -->
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white rounded-[18px] p-5 border border-[#e0e0e0]">
+                    <div>
+                        <h2 class="text-2xl font-semibold apple-tight-title" id="filter-display-title">Semua Alternatif Vendor</h2>
+                        <p class="text-xs text-[#7a7a7a]" id="filter-display-desc">Menampilkan seluruh data coretan vendor yang diajukan oleh pasangan dan planner.</p>
+                    </div>
+                    <div class="flex items-center space-x-1.5 bg-[#f5f5f7] p-1 rounded-[11px] w-full sm:w-auto overflow-x-auto">
+                        <button onclick="filterStatus('All')" id="status-all" class="px-3.5 py-1.5 rounded-[8px] text-xs font-medium bg-white text-[#1d1d1f] transition-all border border-[#e0e0e0] shadow-sm">
+                            Semua Status
+                        </button>
+                        <button onclick="filterStatus('Draft')" id="status-draft" class="px-3.5 py-1.5 rounded-[8px] text-xs font-medium text-[#7a7a7a] hover:text-[#1d1d1f] transition-all">
+                            Draft
+                        </button>
+                        <button onclick="filterStatus('Selected')" id="status-selected" class="px-3.5 py-1.5 rounded-[8px] text-xs font-medium text-[#7a7a7a] hover:text-[#1d1d1f] transition-all">
+                            Terpilih
+                        </button>
+                        <button onclick="filterStatus('Eliminated')" id="status-eliminated" class="px-3.5 py-1.5 rounded-[8px] text-xs font-medium text-[#7a7a7a] hover:text-[#1d1d1f] transition-all">
+                            Dieliminasi
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Dynamic Vendor Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="vendor-cards-grid">
+                    <!-- Javascript will render cards here -->
+                </div>
+                
+                <!-- Blank State Placeholder when no card matches -->
+                <div id="blank-state" class="hidden text-center py-16 bg-white rounded-[18px] border border-dashed border-[#e0e0e0] px-4">
+                    <div class="w-16 h-16 bg-[#f5f5f7] rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fa-solid fa-rectangle-list text-[#7a7a7a] text-xl"></i>
+                    </div>
+                    <h4 class="text-lg font-semibold text-[#1d1d1f]">Belum Ada Vendor di Kategori Ini</h4>
+                    <p class="text-xs text-[#7a7a7a] mt-1 max-w-xs mx-auto">Mulai tambahkan opsi vendor menarik dari brosur/pricelist yang telah Anda kumpulkan bersama pasangan.</p>
+                    <button onclick="openAddVendorModal()" class="active-scale bg-[#0066cc] text-white rounded-full text-xs px-5 py-2 font-semibold mt-4 hover:bg-[#0071e3] transition">
+                        Tambah Vendor Baru
+                    </button>
+                </div>
+
+            </section>
+        </div>
+
+        <!-- Motherboard Data View (Dashboard Layout) -->
+        <div id="motherboard-view" class="hidden space-y-8">
+            <!-- Overview Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="bg-white rounded-[18px] p-5 border border-[#e0e0e0] flex justify-between items-start">
+                    <div>
+                        <span class="text-[11px] text-[#7a7a7a] uppercase block font-semibold">Total Anggaran (Limit)</span>
+                        <span class="text-2xl font-bold text-[#1d1d1f] mt-1 block" id="mb-limit">Rp350.000.000</span>
+                    </div>
+                    <button onclick="openEditBudgetModal()" class="w-8 h-8 rounded-full bg-[#f5f5f7] flex items-center justify-center text-[#7a7a7a] hover:text-[#0066cc] transition active-scale" title="Edit Anggaran">
+                        <i class="fa-solid fa-pen text-xs"></i>
+                    </button>
+                </div>
+                <div class="bg-white rounded-[18px] p-5 border border-[#e0e0e0]">
+                    <span class="text-[11px] text-[#7a7a7a] uppercase block font-semibold">Pengeluaran Terpilih</span>
+                    <span class="text-2xl font-bold text-[#0066cc] mt-1 block" id="mb-spent">Rp0</span>
+                </div>
+                <div class="bg-white rounded-[18px] p-5 border border-[#e0e0e0]">
+                    <span class="text-[11px] text-[#7a7a7a] uppercase block font-semibold">Sisa Alokasi Dana</span>
+                    <span class="text-2xl font-bold text-emerald-600 mt-1 block" id="mb-remaining">Rp350.000.000</span>
+                </div>
+                <div class="bg-white rounded-[18px] p-5 border border-[#e0e0e0]">
+                    <span class="text-[11px] text-[#7a7a7a] uppercase block font-semibold">Kelengkapan Vendor</span>
+                    <span class="text-2xl font-bold text-[#1d1d1f] mt-1 block" id="mb-progress">0 / 6 Kategori</span>
+                </div>
+            </div>
+
+            <!-- Detailed Selected Table -->
+            <div class="bg-white rounded-[18px] border border-[#e0e0e0] overflow-hidden">
+                <div class="p-6 border-b border-[#e0e0e0] flex items-center justify-between flex-wrap gap-4">
+                    <div>
+                        <h3 class="text-lg font-semibold text-[#1d1d1f] apple-tight-title">Rekapitulasi Vendor Terpilih</h3>
+                        <p class="text-xs text-[#7a7a7a]">Daftar vendor resmi yang telah disetujui oleh Decider (Tama)</p>
+                    </div>
+                    <button onclick="exportToPDF()" class="active-scale bg-[#0066cc] text-white rounded-full text-xs px-5 py-2 font-semibold flex items-center space-x-1.5 hover:bg-[#0071e3] transition">
+                        <i class="fa-solid fa-file-pdf text-[11px]"></i>
+                        <span>Unduh Laporan PDF</span>
+                    </button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm text-[#1d1d1f]">
+                        <thead class="bg-[#f5f5f7] text-[11px] uppercase tracking-wider text-[#7a7a7a] border-b border-[#e0e0e0]">
+                            <tr>
+                                <th class="px-6 py-4">Kategori</th>
+                                <th class="px-6 py-4">Vendor Terpilih</th>
+                                <th class="px-6 py-4">Paket</th>
+                                <th class="px-6 py-4">Harga</th>
+                                <th class="px-6 py-4">Catatan Teknis / Detail Pilihan</th>
+                            </tr>
+                        </thead>
+                        <tbody id="mb-selected-table-body" class="divide-y divide-[#e0e0e0]">
+                            <!-- Rendered dynamically in JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Detailed Payment Milestones Table -->
+            <div class="bg-white rounded-[18px] border border-[#e0e0e0] overflow-hidden">
+                <div class="p-6 border-b border-[#e0e0e0] flex items-center justify-between flex-wrap gap-4">
+                    <div>
+                        <h3 class="text-lg font-semibold text-[#1d1d1f] apple-tight-title"><i class="fa-solid fa-file-invoice-dollar mr-2 text-[#0066cc]"></i> Jadwal Termin Pembayaran &amp; Bukti Transfer</h3>
+                        <p class="text-xs text-[#7a7a7a]">Rincian termin pembayaran untuk vendor terpilih (DP 30% &amp; Pelunasan 70%)</p>
+                    </div>
+                    <div class="flex items-center space-x-4 text-xs font-semibold">
+                        <div class="bg-[#fafafc] border border-[#e0e0e0] px-4 py-2 rounded-[11px]">
+                            <span class="text-[10px] text-[#7a7a7a] block leading-none">Total Terbayar</span>
+                            <span class="text-sm font-bold text-emerald-600 mt-1 block" id="pm-total-paid">Rp0</span>
+                        </div>
+                        <div class="bg-[#fafafc] border border-[#e0e0e0] px-4 py-2 rounded-[11px]">
+                            <span class="text-[10px] text-[#7a7a7a] block leading-none">Sisa Hutang Vendor</span>
+                            <span class="text-sm font-bold text-rose-600 mt-1 block" id="pm-total-unpaid">Rp0</span>
+                        </div>
+                        <button onclick="openAddMilestoneModal()" class="active-scale bg-[#0066cc] text-white rounded-full text-xs px-4 py-2.5 font-semibold hover:bg-[#0071e3] transition flex items-center space-x-1.5 h-11">
+                            <i class="fa-solid fa-plus"></i>
+                            <span>Tambah Termin</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm text-[#1d1d1f]">
+                        <thead class="bg-[#f5f5f7] text-[11px] uppercase tracking-wider text-[#7a7a7a] border-b border-[#e0e0e0]">
+                            <tr>
+                                <th class="px-6 py-4">Vendor</th>
+                                <th class="px-6 py-4">Tahapan Termin</th>
+                                <th class="px-6 py-4">Jumlah Tagihan</th>
+                                <th class="px-6 py-4">Jatuh Tempo</th>
+                                <th class="px-6 py-4">Bukti Upload</th>
+                                <th class="px-6 py-4">Status Bayar</th>
+                                <th class="px-6 py-4 text-right">Kelola / Verifikasi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="mb-payment-table-body" class="divide-y divide-[#e0e0e0]">
+                            <!-- Loaded dynamically in JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- LDR Timeline -->
+                <div class="bg-white rounded-[18px] p-6 border border-[#e0e0e0] space-y-6">
+                    <div>
+                        <h3 class="text-lg font-semibold text-[#1d1d1f] apple-tight-title"><i class="fa-regular fa-calendar-check mr-2 text-[#0066cc]"></i> Timeline Utama &amp; Komunikasi LDR</h3>
+                        <p class="text-xs text-[#7a7a7a]">Garis waktu resmi koordinasi jarak jauh Bandung - Singapura - Jakarta</p>
+                    </div>
+                    
+                    <div class="space-y-6 relative before:absolute before:left-3 before:top-2 before:bottom-2 before:w-[2px] before:bg-gray-100">
+                        <div class="relative flex items-start space-x-4">
+                            <div class="w-6 h-6 rounded-full bg-blue-100 border border-blue-500 flex items-center justify-center text-xs font-semibold text-blue-600 relative z-10">1</div>
+                            <div class="flex-1 bg-[#f5f5f7] p-4 rounded-[11px] border border-[#e0e0e0]">
+                                <span class="text-xs font-bold text-[#0066cc] block uppercase tracking-wider">Sabtu, 6 Juni 2026</span>
+                                <h4 class="font-semibold text-sm mt-0.5 text-[#1d1d1f]">Acara Lamaran (Engagement)</h4>
+                                <p class="text-xs text-[#7a7a7a] mt-1">Diselenggarakan secara khidmat di Bandung. Penyerahan tanda pengikat awal.</p>
+                            </div>
+                        </div>
+
+                        <div class="relative flex items-start space-x-4">
+                            <div class="w-6 h-6 rounded-full bg-purple-100 border border-purple-500 flex items-center justify-center text-xs font-semibold text-purple-600 relative z-10">2</div>
+                            <div class="flex-1 bg-[#f5f5f7] p-4 rounded-[11px] border border-[#e0e0e0]">
+                                <span class="text-xs font-bold text-purple-600 block uppercase tracking-wider">Setiap Bulan (Akhir Pekan)</span>
+                                <h4 class="font-semibold text-sm mt-0.5 text-[#1d1d1f]">Pertemuan Tatap Muka &amp; Sidang Vendor</h4>
+                                <p class="text-xs text-[#7a7a7a] mt-1">Koordinasi bulanan di pertengahan bulan untuk melakukan survei lokasi (venue check) dan rapat vendor teknis langsung di Bandung.</p>
+                            </div>
+                        </div>
+
+                        <div class="relative flex items-start space-x-4">
+                            <div class="w-6 h-6 rounded-full bg-emerald-100 border border-emerald-500 flex items-center justify-center text-xs font-semibold text-emerald-600 relative z-10">3</div>
+                            <div class="flex-1 bg-[#f5f5f7] p-4 rounded-[11px] border border-[#e0e0e0]">
+                                <span class="text-xs font-bold text-emerald-600 block uppercase tracking-wider">Sabtu, 20 Maret 2027</span>
+                                <h4 class="font-semibold text-sm mt-0.5 text-[#1d1d1f]">Hari H Resepsi Pernikahan</h4>
+                                <p class="text-xs text-[#7a7a7a] mt-1">Acara utama Akad &amp; Resepsi pasca Idul Fitri 2027 bertempat di Aula Badarusamsi Ditkuad Bandung.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Venue Comparison -->
+                <div class="bg-white rounded-[18px] p-6 border border-[#e0e0e0] space-y-6">
+                    <div>
+                        <h3 class="text-lg font-semibold text-[#1d1d1f] apple-tight-title"><i class="fa-solid fa-building-columns mr-2 text-[#7a7a7a]"></i> Analisis Eliminasi Venue</h3>
+                        <p class="text-xs text-[#7a7a7a]">Perbandingan teknis gedung untuk menentukan pilihan akhir terbaik</p>
+                    </div>
+                    
+                    <div class="overflow-x-auto border border-[#e0e0e0] rounded-[11px]">
+                        <table class="w-full text-left text-xs text-[#1d1d1f]">
+                            <thead class="bg-[#f5f5f7] text-[10px] uppercase tracking-wider text-[#7a7a7a] border-b border-[#e0e0e0]">
+                                <tr>
+                                    <th class="px-4 py-3">Fitur</th>
+                                    <th class="px-4 py-3 bg-emerald-50 text-emerald-800 font-bold">Aula Badarusamsi (Terpilih)</th>
+                                    <th class="px-4 py-3">Aula LPTQ Jabar (Dieliminasi)</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-[#e0e0e0]">
+                                <tr>
+                                    <td class="px-4 py-3 font-semibold">Harga Sewa</td>
+                                    <td class="px-4 py-3 bg-emerald-50/40 text-emerald-700 font-semibold">Rp8.500.000 (Kebersihan inc.)</td>
+                                    <td class="px-4 py-3 text-red-600">Rp5.500.000 (Gedung kosong)</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-3 font-semibold">Luas Area</td>
+                                    <td class="px-4 py-3 bg-emerald-50/40">24 x 12 Meter (288 m²)</td>
+                                    <td class="px-4 py-3">400 m²</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-3 font-semibold">Listrik &amp; Genset</td>
+                                    <td class="px-4 py-3 bg-emerald-50/40 text-emerald-700 font-semibold">Gratis / Bebas Genset</td>
+                                    <td class="px-4 py-3 text-red-600">5.000W (Wajib sewa genset)</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-3 font-semibold">AC / Pendingin</td>
+                                    <td class="px-4 py-3 bg-emerald-50/40">1 Kipas + Charge AC Rp150.000</td>
+                                    <td class="px-4 py-3 text-red-600">6 AC 1/2 PK (Wajib standing AC)</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-3 font-semibold">Batas Waktu</td>
+                                    <td class="px-4 py-3 bg-emerald-50/40">06.00 - 14.00 WIB (Pagi)</td>
+                                    <td class="px-4 py-3">s.d 14.00 WIB</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="bg-blue-50 text-blue-800 border border-blue-100 p-3 rounded-[11px] text-[11px] leading-relaxed">
+                        <i class="fa-solid fa-circle-info mr-1"></i> <strong>Alasan Eliminasi:</strong> Aula Badarusamsi jauh lebih praktis karena listrik bebas gubukan genset, memiliki charge AC murah, dan ukuran panggung pelaminan 7x9m sangat proporsional.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- LDR Hub View (Dashboard Layout) -->
+        <div id="ldrhub-view" class="hidden space-y-8">
+            <!-- Row 1: Clocks & Sync Hub -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- WIB Clock -->
+                <div class="bg-white rounded-[18px] p-5 border border-[#e0e0e0] flex items-center space-x-4">
+                    <div class="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-[#0066cc]">
+                        <i class="fa-regular fa-clock text-xl"></i>
+                    </div>
+                    <div>
+                        <span class="text-[11px] text-[#7a7a7a] uppercase block font-semibold">WIB (Bandung / Jakarta)</span>
+                        <span class="text-2xl font-bold text-[#1d1d1f]" id="clock-wib">00:00:00 WIB</span>
+                    </div>
+                </div>
+                <!-- SGT Clock -->
+                <div class="bg-white rounded-[18px] p-5 border border-[#e0e0e0] flex items-center space-x-4">
+                    <div class="w-12 h-12 rounded-full bg-purple-50 flex items-center justify-center text-purple-600">
+                        <i class="fa-regular fa-clock text-xl"></i>
+                    </div>
+                    <div>
+                        <span class="text-[11px] text-[#7a7a7a] uppercase block font-semibold">SGT (Singapura)</span>
+                        <span class="text-2xl font-bold text-[#1d1d1f]" id="clock-sgt">00:00:00 SGT</span>
+                    </div>
+                </div>
+                <!-- Meeting Sync Hub Countdown -->
+                <div class="bg-white rounded-[18px] p-5 border border-[#e0e0e0] flex items-center justify-between">
+                    <div>
+                        <span class="text-[11px] text-[#7a7a7a] uppercase block font-semibold">Rapat Bulanan Berikutnya</span>
+                        <span class="text-xs font-bold text-[#1d1d1f] block mt-0.5" id="meetup-countdown">Loading...</span>
+                    </div>
+                    <a href="https://meet.google.com" target="_blank" class="active-scale bg-[#0066cc] text-white rounded-full text-xs px-4 py-2 font-semibold flex items-center space-x-1.5 hover:bg-[#0071e3] transition">
+                        <i class="fa-solid fa-video"></i>
+                        <span>Rapat Online</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Row 2: LDR Checklist (To-Do) & Guest RSVP Planner -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <!-- Checklist (To-Do) (Span 5) -->
+                <div class="lg:col-span-5 bg-white rounded-[18px] p-6 border border-[#e0e0e0] flex flex-col space-y-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-lg font-semibold text-[#1d1d1f] apple-tight-title"><i class="fa-solid fa-list-check mr-2 text-[#0066cc]"></i> LDR Checklist</h3>
+                            <p class="text-xs text-[#7a7a7a]">Daftar tugas persiapan pernikahan berdua</p>
+                        </div>
+                        <button onclick="openAddTaskModal()" class="w-8 h-8 rounded-full bg-[#f5f5f7] flex items-center justify-center text-[#1d1d1f] hover:text-[#0066cc] transition active-scale" title="Tambah Tugas">
+                            <i class="fa-solid fa-plus text-xs"></i>
+                        </button>
+                    </div>
+
+                    <!-- Task Categories Pills inside Hub -->
+                    <div class="flex items-center space-x-1 bg-[#f5f5f7] p-1 rounded-[11px] overflow-x-auto text-[11px] font-semibold">
+                        <button onclick="filterTasks('All')" id="task-filter-all" class="flex-1 py-1 rounded-[8px] bg-white text-[#1d1d1f] shadow-sm">Semua</button>
+                        <button onclick="filterTasks('H-9')" id="task-filter-h9" class="flex-1 py-1 rounded-[8px] text-[#7a7a7a]">H-9</button>
+                        <button onclick="filterTasks('H-6')" id="task-filter-h6" class="flex-1 py-1 rounded-[8px] text-[#7a7a7a]">H-6</button>
+                        <button onclick="filterTasks('H-3')" id="task-filter-h3" class="flex-1 py-1 rounded-[8px] text-[#7a7a7a]">H-3</button>
+                        <button onclick="filterTasks('H-1')" id="task-filter-h1" class="flex-1 py-1 rounded-[8px] text-[#7a7a7a]">H-1</button>
+                    </div>
+
+                    <!-- Task List Body -->
+                    <div class="space-y-3 max-h-[400px] overflow-y-auto pr-1" id="task-list-container">
+                        <!-- Loaded dynamically in JS -->
+                    </div>
+                </div>
+
+                <!-- Guest Planner (Span 7) -->
+                <div class="lg:col-span-7 bg-white rounded-[18px] p-6 border border-[#e0e0e0] flex flex-col space-y-6">
+                    <div class="flex items-center justify-between flex-wrap gap-4">
+                        <div>
+                            <h3 class="text-lg font-semibold text-[#1d1d1f] apple-tight-title"><i class="fa-solid fa-user-group mr-2 text-[#7a7a7a]"></i> Kalkulator Tamu &amp; RSVP</h3>
+                            <p class="text-xs text-[#7a7a7a]">Kelola daftar undangan, RSVP, dan nomor meja</p>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <button onclick="openAddGuestModal()" class="active-scale bg-[#0066cc] text-white rounded-full text-xs px-4 py-2 font-semibold hover:bg-[#0071e3] transition">
+                                <i class="fa-solid fa-user-plus mr-1"></i> Tambah Tamu
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Guest Summary Stats Grid -->
+                    <div class="grid grid-cols-4 gap-4 text-center">
+                        <div class="bg-[#f5f5f7] p-3 rounded-[11px] border border-[#e0e0e0]">
+                            <span class="text-[9px] text-[#7a7a7a] uppercase font-semibold block leading-none">Total Pax</span>
+                            <span class="text-base font-bold text-[#1d1d1f] mt-1 block" id="guest-stat-total">0</span>
+                        </div>
+                        <div class="bg-emerald-50 p-3 rounded-[11px] border border-emerald-100">
+                            <span class="text-[9px] text-emerald-700 uppercase font-semibold block leading-none">Hadir (RSVP)</span>
+                            <span class="text-base font-bold text-emerald-700 mt-1 block" id="guest-stat-attending">0</span>
+                        </div>
+                        <div class="bg-rose-50 p-3 rounded-[11px] border border-rose-100">
+                            <span class="text-[9px] text-rose-700 uppercase font-semibold block leading-none">Absen (RSVP)</span>
+                            <span class="text-base font-bold text-rose-700 mt-1 block" id="guest-stat-absent">0</span>
+                        </div>
+                        <div class="bg-amber-50 p-3 rounded-[11px] border border-amber-100">
+                            <span class="text-[9px] text-amber-700 uppercase font-semibold block leading-none">Pending</span>
+                            <span class="text-base font-bold text-amber-700 mt-1 block" id="guest-stat-pending">0</span>
+                        </div>
+                    </div>
+
+                    <!-- Guest Table Filters -->
+                    <div class="flex items-center justify-between flex-wrap gap-2 text-xs">
+                        <div class="flex items-center space-x-1.5 bg-[#f5f5f7] p-1 rounded-[8px]">
+                            <button onclick="filterGuests('All')" id="guest-filter-all" class="px-2.5 py-1 rounded-[5px] bg-white font-medium shadow-sm">Semua</button>
+                            <button onclick="filterGuests('Indah')" id="guest-filter-indah" class="px-2.5 py-1 rounded-[5px] text-[#7a7a7a]">Indah</button>
+                            <button onclick="filterGuests('Tama')" id="guest-filter-tama" class="px-2.5 py-1 rounded-[5px] text-[#7a7a7a]">Tama</button>
+                            <button onclick="filterGuests('Keluarga')" id="guest-filter-keluarga" class="px-2.5 py-1 rounded-[5px] text-[#7a7a7a]">Keluarga</button>
+                        </div>
+                        <select onchange="filterGuestsRSVP(this.value)" class="bg-[#f5f5f7] border border-[#e0e0e0] rounded-[8px] px-2 py-1 text-xs focus:outline-none">
+                            <option value="All">Semua RSVP</option>
+                            <option value="Hadir">Hadir</option>
+                            <option value="Absen">Absen</option>
+                            <option value="Pending">Pending</option>
+                        </select>
+                    </div>
+
+                    <!-- Guest Table Container -->
+                    <div class="overflow-x-auto border border-[#e0e0e0] rounded-[11px] max-h-[350px] overflow-y-auto">
+                        <table class="w-full text-left text-xs text-[#1d1d1f]">
+                            <thead class="bg-[#f5f5f7] text-[10px] uppercase tracking-wider text-[#7a7a7a] border-b border-[#e0e0e0] sticky top-0">
+                                <tr>
+                                    <th class="px-4 py-3">Nama Undangan</th>
+                                    <th class="px-4 py-3">Pihak</th>
+                                    <th class="px-4 py-3">Pax</th>
+                                    <th class="px-4 py-3">Status RSVP</th>
+                                    <th class="px-4 py-3">No Meja</th>
+                                    <th class="px-4 py-3 text-right">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="guest-table-body" class="divide-y divide-[#e0e0e0]">
+                                <!-- Loaded dynamically in JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Superadmin Console View (Dashboard Layout) -->
+        <div id="superadmin-view" class="hidden space-y-8">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-3xl font-bold apple-tight-title text-[#1d1d1f]">Superadmin Console</h2>
+                    <p class="text-sm text-[#7a7a7a]">Kelola semua tenant client, proyek pernikahan, konfigurasi peran, dan izin akses.</p>
+                </div>
+                <div>
+                    <button onclick="openCreateProjectModal()" class="active-scale bg-[#0066cc] text-white rounded-full text-xs px-5 py-2.5 font-semibold flex items-center space-x-1.5 hover:bg-[#0071e3] transition">
+                        <i class="fa-solid fa-folder-plus text-[12px]"></i>
+                        <span>Buat Proyek Baru</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Overview Statistics -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                <div class="bg-white rounded-[18px] p-5 border border-[#e0e0e0] flex items-center space-x-4">
+                    <div class="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-[#0066cc]">
+                        <i class="fa-solid fa-folder-open text-xl"></i>
+                    </div>
+                    <div>
+                        <span class="text-[11px] text-[#7a7a7a] uppercase block font-semibold">Total Proyek Client</span>
+                        <span class="text-2xl font-bold text-[#1d1d1f]" id="sa-stat-projects">0</span>
+                    </div>
+                </div>
+                <div class="bg-white rounded-[18px] p-5 border border-[#e0e0e0] flex items-center space-x-4">
+                    <div class="w-12 h-12 rounded-full bg-purple-50 flex items-center justify-center text-purple-600">
+                        <i class="fa-solid fa-user-gear text-xl"></i>
+                    </div>
+                    <div>
+                        <span class="text-[11px] text-[#7a7a7a] uppercase block font-semibold">Total Akun Pengguna</span>
+                        <span class="text-2xl font-bold text-[#1d1d1f]" id="sa-stat-users">0</span>
+                    </div>
+                </div>
+                <div class="bg-white rounded-[18px] p-5 border border-[#e0e0e0] flex items-center space-x-4">
+                    <div class="w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600">
+                        <i class="fa-solid fa-circle-check text-xl"></i>
+                    </div>
+                    <div>
+                        <span class="text-[11px] text-[#7a7a7a] uppercase block font-semibold">Integrasi API Live</span>
+                        <span class="text-2xl font-bold text-[#1d1d1f]" id="sa-stat-apis">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <!-- Left Panel: Projects Directory (Span 7) -->
+                <div class="lg:col-span-7 bg-white rounded-[18px] border border-[#e0e0e0] overflow-hidden flex flex-col">
+                    <div class="p-6 border-b border-[#e0e0e0]">
+                        <h3 class="text-lg font-semibold text-[#1d1d1f] apple-tight-title"><i class="fa-solid fa-table-list mr-2 text-[#0066cc]"></i> Direktori Proyek Client</h3>
+                        <p class="text-xs text-[#7a7a7a]">Daftar proyek client aktif yang dikelola dalam sistem multi-tenant.</p>
+                    </div>
+                    <div class="overflow-x-auto flex-1">
+                        <table class="w-full text-left text-sm text-[#1d1d1f]">
+                            <thead class="bg-[#f5f5f7] text-[10px] uppercase tracking-wider text-[#7a7a7a] border-b border-[#e0e0e0]">
+                                <tr>
+                                    <th class="px-5 py-3">Nama Proyek</th>
+                                    <th class="px-5 py-3">Anggaran</th>
+                                    <th class="px-5 py-3">Tanggal H</th>
+                                    <th class="px-5 py-3">Backend</th>
+                                    <th class="px-5 py-3 text-right">Kelola</th>
+                                </tr>
+                            </thead>
+                            <tbody id="sa-projects-table-body" class="divide-y divide-[#e0e0e0]">
+                                <!-- Loaded dynamically in JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Right Panel: Role & Permission Manager for Selected Project (Span 5) -->
+                <div class="lg:col-span-5 bg-white rounded-[18px] border border-[#e0e0e0] p-6 flex flex-col space-y-6">
+                    <div>
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-lg font-semibold text-[#1d1d1f] apple-tight-title" id="sa-role-panel-title"><i class="fa-solid fa-user-shield mr-2 text-purple-600"></i> Pengaturan Peran</h3>
+                            <button onclick="openAddRoleModal()" class="w-8 h-8 rounded-full bg-[#f5f5f7] flex items-center justify-center text-[#1d1d1f] hover:text-[#0066cc] transition active-scale" title="Tambah Peran Baru">
+                                <i class="fa-solid fa-plus text-xs"></i>
+                            </button>
+                        </div>
+                        <p class="text-xs text-[#7a7a7a] mt-1" id="sa-role-panel-desc">Pilih salah satu proyek di kiri untuk mengedit daftar peran &amp; hak akses penggunanya.</p>
+                    </div>
+
+                    <!-- Roles List Container -->
+                    <div class="space-y-4 max-h-[450px] overflow-y-auto pr-1" id="sa-roles-container">
+                        <!-- Loaded dynamically in JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Floating Bottom Sticky bar for Mobile/Tablet quick budget view -->
+    <div class="fixed bottom-0 left-0 right-0 h-[64px] frosted-glass border-t border-[#e0e0e0] flex lg:hidden items-center justify-between px-6 z-40">
+        <div>
+            <span class="text-[10px] text-[#7a7a7a] uppercase block leading-none">Terpilih (Selected)</span>
+            <span class="font-bold text-[#0066cc] text-base" id="mobile-spent-display">Rp133.500.000</span>
+        </div>
+        <div class="flex items-center space-x-2">
+            <button onclick="toggleActivityLog()" class="active-scale w-11 h-11 rounded-full bg-white border border-[#e0e0e0] flex items-center justify-center text-[#1d1d1f]">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+            </button>
+            <button onclick="openAddVendorModal()" class="active-scale bg-[#0066cc] text-white rounded-full text-xs px-5 h-11 font-medium flex items-center space-x-1.5 hover:bg-[#0071e3] transition">
+                <i class="fa-solid fa-plus text-[10px]"></i>
+                <span>Tambah Vendor</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Log Aktivitas Side Panel (Sliding Drawer) -->
+    <div id="activity-log-drawer" class="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm hidden transition-opacity duration-300">
+        <div class="absolute right-0 top-0 bottom-0 w-full max-w-[450px] bg-white shadow-2xl flex flex-col transform translate-x-full transition-transform duration-300" id="drawer-container">
+            <div class="p-6 border-b border-[#e0e0e0] flex items-center justify-between">
+                <div>
+                    <h3 class="text-xl font-semibold apple-tight-title"><i class="fa-solid fa-clock-rotate-left mr-2 text-gray-400"></i> Log Aktivitas LDR</h3>
+                    <p class="text-xs text-[#7a7a7a]">Riwayat audit koordinasi dan keputusan anggaran</p>
+                </div>
+                <button onclick="toggleActivityLog()" class="w-8 h-8 rounded-full bg-[#f5f5f7] flex items-center justify-center text-[#1d1d1f] active-scale">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto p-6 space-y-4" id="activity-logs-container">
+                <!-- Log rows rendered dynamically -->
+            </div>
+            
+            <div class="p-4 bg-[#f5f5f7] text-center text-[11px] text-[#7a7a7a] border-t border-[#e0e0e0]">
+                Sinkronisasi Audit Trail Instan via Sheet_Log
+            </div>
+        </div>
+    </div>
+
+    <!-- Developer Apps Script Setup Modal -->
+    <div id="dev-console-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="w-full max-w-[850px] h-[90vh] bg-[#1d1d1f] text-white rounded-[18px] flex flex-col overflow-hidden border border-[#272729]">
+            <div class="p-6 border-b border-[#272729] flex items-center justify-between">
+                <div>
+                    <h3 class="text-xl font-semibold apple-tight-title text-[#2997ff]"><i class="fa-solid fa-gears mr-2"></i> Integrasi Google Apps Script (GAS)</h3>
+                    <p class="text-xs text-[#7a7a7a]">Langkah menghubungkan dasbor ini dengan Google Sheets &amp; Drive milik Anda</p>
+                </div>
+                <button onclick="toggleDeveloperConsole()" class="w-8 h-8 rounded-full bg-[#272729] flex items-center justify-center text-white active-scale">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto p-6 space-y-6 text-sm">
+                <div class="bg-[#272729] p-4 rounded-[11px] border border-[#333333]">
+                    <h4 class="font-semibold mb-2 text-white"><i class="fa-solid fa-circle-info text-[#2997ff] mr-1"></i> Cara Memasang Backend Serverless:</h4>
+                    <ol class="list-decimal pl-5 space-y-1.5 text-xs text-[#cccccc]">
+                        <li>Buat Spreadsheet baru di <strong>Google Sheets</strong>, lalu klik menu <strong>Extensions &gt; Apps Script</strong>.</li>
+                        <li>Hapus semua kode bawaan di dalam berkas editor, salin seluruh kode di bawah ini lalu tempel.</li>
+                        <li>Sesuaikan ID kelompok pernikahan atau ID folder di GAS jika diperlukan, lalu klik ikon simpan.</li>
+                        <li>Klik <strong>Deploy &gt; New Deployment</strong>, pilih jenis <strong>Web App</strong>.</li>
+                        <li>Atur <em>Execute as:</em> <strong>Me (email Anda)</strong> dan <em>Who has access:</em> <strong>Anyone</strong>.</li>
+                        <li>Salin URL Web App yang dihasilkan, lalu masukkan pada kolom pengaturan Web App URL di dasbor di bawah ini untuk menghubungkan database secara permanen!</li>
+                    </ol>
+                </div>
+
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-semibold uppercase tracking-wider text-[#7a7a7a]">Berkas: Code.gs</span>
+                        <button onclick="copyGasCode()" class="bg-[#0066cc] hover:bg-[#0071e3] transition text-white px-3 py-1 rounded-[5px] text-xs active-scale">
+                            <i class="fa-regular fa-copy mr-1"></i> Salin Kode
+                        </button>
+                    </div>
+                    <pre class="bg-black/80 text-emerald-400 p-4 rounded-[11px] text-[11px] font-mono overflow-x-auto max-h-[350px] border border-[#272729]" id="gas-code-block">
+/* CODE.GS — BACKEND SERVERLESS INTERACTIVE WEDDING PLANNER */
+const SPREADSHEET_ID = "MASUKKAN_ID_SPREADSHEET_ANDA_DISINI";
+
+function doGet(e) {
+  const action = e.parameter.action;
+  const weddingId = e.parameter.wedding_id;
+  
+  if (action === "getVendorCatalog") {
+    return handleGetVendorCatalog(weddingId);
+  } else if (action === "getBudgetSummary") {
+    return handleGetBudgetSummary(weddingId);
+  }
+  
+  return ContentService.createTextOutput(JSON.stringify({success: false, message: "Invalid GET Action"}))
+                       .setMimeType(ContentService.MimeType.JSON);
+}
+
+function doPost(e) {
+  const payload = JSON.parse(e.postData.contents);
+  const action = payload.action;
+  
+  if (action === "login") {
+    return handleLogin(payload.email, payload.token);
+  } else if (action === "addVendor") {
+    return handleAddVendor(payload);
+  } else if (action === "updateVendorStatus") {
+    return handleUpdateVendorStatus(payload);
+  } else if (action === "deleteVendor") {
+    return handleDeleteVendor(payload);
+  }
+  
+  return ContentService.createTextOutput(JSON.stringify({success: false, message: "Invalid POST Action"}))
+                       .setMimeType(ContentService.MimeType.JSON);
+}
+
+// ... COPY LENGKAP KODE INI DARI TOMBOL SALIN KODE DI ATAS ...
+</pre>
+                </div>
+
+                <div class="border-t border-[#272729] pt-6">
+                    <h4 class="font-semibold mb-2 text-white">Hubungkan Web App URL Anda:</h4>
+                    <div class="flex gap-2">
+                        <input type="text" id="gas-deployed-url" placeholder="https://script.google.com/macros/s/.../exec" class="flex-1 bg-[#272729] text-white text-xs rounded-[11px] px-4 py-3 border border-[#333333] focus:outline-none focus:ring-1 focus:ring-[#0071e3]">
+                        <button onclick="saveGasUrl()" class="bg-[#0066cc] text-white rounded-[11px] px-6 text-xs font-semibold active-scale hover:bg-[#0071e3] transition">Hubungkan API</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="p-4 bg-[#272729] border-t border-[#333333] flex justify-between text-xs text-[#7a7a7a]">
+                <span>AURA System Developer Panel</span>
+                <span class="text-emerald-400"><i class="fa-solid fa-circle-check"></i> Status: Mode Simulasi In-Memory Aktif</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Vendor Form Modal (Clean Apple Input Sheet) -->
+    <div id="add-vendor-modal" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="w-full max-w-[500px] bg-white text-[#1d1d1f] rounded-[18px] overflow-hidden border border-[#e0e0e0] flex flex-col">
+            <div class="p-6 border-b border-[#e0e0e0] flex items-center justify-between">
+                <div>
+                    <h3 class="text-xl font-semibold apple-tight-title"><i class="fa-solid fa-circle-plus text-blue-500 mr-2"></i> Usulkan Vendor Baru</h3>
+                    <p class="text-xs text-[#7a7a7a]">Tambahkan opsi baru untuk dipertimbangkan bersama pasangan.</p>
+                </div>
+                <button onclick="closeAddVendorModal()" class="w-8 h-8 rounded-full bg-[#f5f5f7] flex items-center justify-center text-[#1d1d1f] active-scale">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            
+            <form id="add-vendor-form" onsubmit="handleFormSubmit(event)" class="p-6 space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="col-span-2">
+                        <label class="block text-xs font-semibold text-[#7a7a7a] mb-1">Kategori Esensial</label>
+                        <select id="vendor-category" class="w-full bg-[#f5f5f7] border border-[#e0e0e0] rounded-[11px] px-3.5 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#0066cc]" required>
+                            <option value="Venue">Venue / Gedung</option>
+                            <option value="Catering">Catering</option>
+                            <option value="Decoration">Decoration</option>
+                            <option value="MUA & Attire">MUA &amp; Attire</option>
+                            <option value="Documentation">Documentation</option>
+                            <option value="Entertainment & WO">Entertainment &amp; WO</option>
+                        </select>
+                    </div>
+                    
+                    <div class="col-span-2">
+                        <label class="block text-xs font-semibold text-[#7a7a7a] mb-1">Nama Vendor</label>
+                        <input type="text" id="vendor-name-input" placeholder="contoh: Puspa Catering" class="w-full bg-[#f5f5f7] border border-[#e0e0e0] rounded-[11px] px-3.5 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#0066cc]" required>
+                    </div>
+                    
+                    <div class="col-span-1">
+                        <label class="block text-xs font-semibold text-[#7a7a7a] mb-1">Nama Paket</label>
+                        <input type="text" id="vendor-package" placeholder="contoh: Gold 500 pax" class="w-full bg-[#f5f5f7] border border-[#e0e0e0] rounded-[11px] px-3.5 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#0066cc]" required>
+                    </div>
+                    
+                    <div class="col-span-1">
+                        <label class="block text-xs font-semibold text-[#7a7a7a] mb-1">Harga Paket (Rp)</label>
+                        <input type="number" id="vendor-price" placeholder="contoh: 125000000" class="w-full bg-[#f5f5f7] border border-[#e0e0e0] rounded-[11px] px-3.5 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#0066cc]" required>
+                    </div>
+                    
+                    <div class="col-span-2">
+                        <label class="block text-xs font-semibold text-[#7a7a7a] mb-1">Catatan Teknis / Titik Kritis</label>
+                        <textarea id="vendor-notes" rows="2" placeholder="contoh: Gedung Full AC, Parkir luas, Charge MUA luar 150rb" class="w-full bg-[#f5f5f7] border border-[#e0e0e0] rounded-[11px] px-3.5 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#0066cc]"></textarea>
+                    </div>
+
+                    <div class="col-span-2">
+                        <label class="block text-xs font-semibold text-[#7a7a7a] mb-1">Unggah Lampiran Brosur / Layout Foto</label>
+                        <div class="flex items-center space-x-2">
+                            <input type="text" id="vendor-image-url" placeholder="Tautan foto pelaminan/gedung (atau kosongkan untuk acak)" class="flex-1 bg-[#f5f5f7] border border-[#e0e0e0] rounded-[11px] px-3.5 py-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-[#0066cc]">
+                            <span class="text-xs text-gray-400">URL</span>
+                        </div>
+                    </div>
+
+                    <div class="col-span-2">
+                        <label class="block text-xs font-semibold text-[#7a7a7a] mb-1">Tautan Google Drive (Brosur / Pricelist / Kontrak)</label>
+                        <div class="flex items-center space-x-2">
+                            <input type="url" id="vendor-drive-url" placeholder="https://drive.google.com/..." class="flex-1 bg-[#f5f5f7] border border-[#e0e0e0] rounded-[11px] px-3.5 py-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-[#0066cc]">
+                            <span class="text-xs text-emerald-600 font-semibold"><i class="fa-brands fa-google-drive text-[16px]"></i></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pt-4 flex items-center justify-end space-x-2">
+                    <button type="button" onclick="closeAddVendorModal()" class="bg-[#f5f5f7] text-[#1d1d1f] rounded-full text-xs px-5 py-2.5 font-semibold active-scale">Batal</button>
+                    <button type="submit" class="bg-[#0066cc] text-white rounded-full text-xs px-6 py-2.5 font-semibold active-scale hover:bg-[#0071e3] transition">Kirim Usulan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Budget Modal (Clean Apple Input Sheet) -->
+    <div id="edit-budget-modal" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="w-full max-w-[400px] bg-white text-[#1d1d1f] rounded-[18px] overflow-hidden border border-[#e0e0e0] flex flex-col">
+            <div class="p-6 border-b border-[#e0e0e0] flex items-center justify-between">
+                <div>
+                    <h3 class="text-xl font-semibold apple-tight-title"><i class="fa-solid fa-money-bill-wave text-blue-500 mr-2"></i> Edit Anggaran</h3>
+                    <p class="text-xs text-[#7a7a7a]">Ubah batas maksimal anggaran pernikahan Anda.</p>
+                </div>
+                <button onclick="closeEditBudgetModal()" class="w-8 h-8 rounded-full bg-[#f5f5f7] flex items-center justify-center text-[#1d1d1f] active-scale">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            
+            <form id="edit-budget-form" onsubmit="handleBudgetSubmit(event)" class="p-6 space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-[#7a7a7a] mb-1">Batas Anggaran Baru (Rp)</label>
+                    <input type="number" id="budget-limit-input" placeholder="contoh: 350000000" class="w-full bg-[#f5f5f7] border border-[#e0e0e0] rounded-[11px] px-3.5 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#0066cc]" required>
+                </div>
+
+                <div class="pt-4 flex items-center justify-end space-x-2">
+                    <button type="button" onclick="closeEditBudgetModal()" class="bg-[#f5f5f7] text-[#1d1d1f] rounded-full text-xs px-5 py-2.5 font-semibold active-scale">Batal</button>
+                    <button type="submit" class="bg-[#0066cc] text-white rounded-full text-xs px-6 py-2.5 font-semibold active-scale hover:bg-[#0071e3] transition">Simpan Anggaran</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Beautiful Apple Toast Banner System -->
+    <div id="toast-container" class="fixed top-[110px] right-6 z-50 space-y-2 pointer-events-none"></div>
+
+    <!-- External Modular Scripts -->
+    <script src="js/state.js"></script>
+    <script src="js/helpers.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/workspace.js"></script>
+    <script src="js/motherboard.js"></script>
+    <script src="js/ldrhub.js"></script>
+    <script src="js/superadmin.js"></script>
+    <script src="js/main.js"></script>
+
+    <!-- Add Task Modal -->
+    <div id="add-task-modal" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="w-full max-w-[450px] bg-white text-[#1d1d1f] rounded-[18px] overflow-hidden border border-[#e0e0e0] flex flex-col">
+            <div class="p-6 border-b border-[#e0e0e0] flex items-center justify-between">
+                <div>
+                    <h3 class="text-xl font-semibold apple-tight-title"><i class="fa-solid fa-list-check text-[#0066cc] mr-2"></i> Tambah Tugas Baru</h3>
+                    <p class="text-xs text-[#7a7a7a]">Tambahkan rincian tugas baru untuk perencanaan.</p>
+                </div>
+                <button onclick="closeAddTaskModal()" class="w-8 h-8 rounded-full bg-[#f5f5f7] flex items-center justify-center text-[#1d1d1f] active-scale">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <form onsubmit="handleAddTaskSubmit(event)" class="p-6 space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-[#7a7a7a] mb-1">Nama Tugas</label>
+                    <input type="text" id="task-title-input" placeholder="contoh: Booking MUA Akad" class="w-full bg-[#f5f5f7] border border-[#e0e0e0] rounded-[11px] px-3.5 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#0066cc]" required>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-[#7a7a7a] mb-1">Timeline Target</label>
+                        <select id="task-timeline-input" class="w-full bg-[#f5f5f7] border border-[#e0e0e0] rounded-[11px] px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#0066cc]">
+                            <option value="H-9">H-9 Bulan</option>
+                            <option value="H-6">H-6 Bulan</option>
+                            <option value="H-3">H-3 Bulan</option>
+                            <option value="H-1">H-1 Bulan</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-[#7a7a7a] mb-1">Penanggung Jawab</label>
+                        <select id="task-assignee-input" class="w-full bg-[#f5f5f7] border border-[#e0e0e0] rounded-[11px] px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#0066cc]">
+                            <option value="Indah">Indah (Initiator)</option>
+                            <option value="Tama">Tama (Decider)</option>
+                            <option value="Aura WO">Aura WO (Planner)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="pt-4 flex items-center justify-end space-x-2">
+                    <button type="button" onclick="closeAddTaskModal()" class="bg-[#f5f5f7] text-[#1d1d1f] rounded-full text-xs px-5 py-2.5 font-semibold active-scale">Batal</button>
+                    <button type="submit" class="bg-[#0066cc] text-white rounded-full text-xs px-6 py-2.5 font-semibold active-scale hover:bg-[#0071e3] transition">Simpan Tugas</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Guest Modal -->
+    <div id="add-guest-modal" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="w-full max-w-[450px] bg-white text-[#1d1d1f] rounded-[18px] overflow-hidden border border-[#e0e0e0] flex flex-col">
+            <div class="p-6 border-b border-[#e0e0e0] flex items-center justify-between">
+                <div>
+                    <h3 class="text-xl font-semibold apple-tight-title"><i class="fa-solid fa-user-plus text-emerald-600 mr-2"></i> Tambah Undangan Baru</h3>
+                    <p class="text-xs text-[#7a7a7a]">Daftarkan nama tamu undangan dan partynya.</p>
+                </div>
+                <button onclick="closeAddGuestModal()" class="w-8 h-8 rounded-full bg-[#f5f5f7] flex items-center justify-center text-[#1d1d1f] active-scale">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <form onsubmit="handleAddGuestSubmit(event)" class="p-6 space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-[#7a7a7a] mb-1">Nama Lengkap Tamu</label>
+                    <input type="text" id="guest-name-input" placeholder="contoh: Budi Santoso" class="w-full bg-[#f5f5f7] border border-[#e0e0e0] rounded-[11px] px-3.5 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#0066cc]" required>
+                </div>
+                <div class="grid grid-cols-3 gap-4">
+                    <div class="col-span-1">
+                        <label class="block text-xs font-semibold text-[#7a7a7a] mb-1">Jumlah Pax</label>
+                        <input type="number" id="guest-pax-input" value="2" min="1" class="w-full bg-[#f5f5f7] border border-[#e0e0e0] rounded-[11px] px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0066cc]" required>
+                    </div>
+                    <div class="col-span-1">
+                        <label class="block text-xs font-semibold text-[#7a7a7a] mb-1">Pihak Pengundang</label>
+                        <select id="guest-party-input" class="w-full bg-[#f5f5f7] border border-[#e0e0e0] rounded-[11px] px-2 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0066cc]">
+                            <option value="Indah">Indah</option>
+                            <option value="Tama">Tama</option>
+                            <option value="Keluarga">Keluarga</option>
+                        </select>
+                    </div>
+                    <div class="col-span-1">
+                        <label class="block text-xs font-semibold text-[#7a7a7a] mb-1">Nomor Meja</label>
+                        <input type="text" id="guest-table-input" placeholder="contoh: Meja 12" class="w-full bg-[#f5f5f7] border border-[#e0e0e0] rounded-[11px] px-2 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[#0066cc]">
+                    </div>
+                </div>
+                <div class="pt-4 flex items-center justify-end space-x-2">
+                    <button type="button" onclick="closeAddGuestModal()" class="bg-[#f5f5f7] text-[#1d1d1f] rounded-full text-xs px-5 py-2.5 font-semibold active-scale">Batal</button>
+                    <button type="submit" class="bg-[#0066cc] text-white rounded-full text-xs px-6 py-2.5 font-semibold active-scale hover:bg-[#0071e3] transition">Simpan Undangan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Upload Receipt Modal -->
+    <div id="upload-receipt-modal" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="w-full max-w-[450px] bg-white text-[#1d1d1f] rounded-[18px] overflow-hidden border border-[#e0e0e0] flex flex-col">
+            <div class="p-6 border-b border-[#e0e0e0] flex items-center justify-between">
+                <div>
+                    <h3 class="text-xl font-semibold apple-tight-title"><i class="fa-solid fa-file-invoice-dollar text-[#0066cc] mr-2"></i> Unggah Bukti Pembayaran</h3>
+                    <p class="text-xs text-[#7a7a7a]">Kirim bukti transfer agar dapat divalidasi oleh Decider.</p>
+                </div>
+                <button onclick="closeUploadReceiptModal()" class="w-8 h-8 rounded-full bg-[#f5f5f7] flex items-center justify-center text-[#1d1d1f] active-scale">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <form onsubmit="handleUploadReceiptSubmit(event)" class="p-6 space-y-4">
+                <input type="hidden" id="receipt-payment-id">
+                <div>
+                    <label class="block text-xs font-semibold text-[#7a7a7a] mb-1">Tautan Bukti Bayar (Link Google Drive / URL Foto)</label>
+                    <input type="url" id="receipt-url-input" placeholder="https://drive.google.com/..." class="w-full bg-[#f5f5f7] border border-[#e0e0e0] rounded-[11px] px-3.5 py-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-[#0066cc]" required>
+                    <p class="text-[10px] text-[#7a7a7a] mt-1"><i class="fa-solid fa-shield-halved text-[#0066cc] mr-1"></i> Bukti bayar akan disimpan secara aman di folder bersama.</p>
+                </div>
+                <div class="pt-4 flex items-center justify-end space-x-2">
+                    <button type="button" onclick="closeUploadReceiptModal()" class="bg-[#f5f5f7] text-[#1d1d1f] rounded-full text-xs px-5 py-2.5 font-semibold active-scale">Batal</button>
+                    <button type="submit" class="bg-[#0066cc] text-white rounded-full text-xs px-6 py-2.5 font-semibold active-scale hover:bg-[#0071e3] transition">Kirim Bukti</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add/Edit Milestone Modal -->
+    <div id="add-milestone-modal" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="w-full max-w-[450px] bg-white text-[#1d1d1f] rounded-[18px] overflow-hidden border border-[#e0e0e0] flex flex-col">
+            <div class="p-6 border-b border-[#e0e0e0] flex items-center justify-between">
+                <div>
+                    <h3 class="text-xl font-semibold apple-tight-title" id="milestone-modal-title"><i class="fa-solid fa-file-invoice-dollar text-[#0066cc] mr-2"></i> Tambah Termin Pembayaran</h3>
+                    <p class="text-xs text-[#7a7a7a]" id="milestone-modal-desc">Tambahkan tahapan pembayaran baru untuk vendor terpilih.</p>
+                </div>
+                <button onclick="closeAddMilestoneModal()" class="w-8 h-8 rounded-full bg-[#f5f5f7] flex items-center justify-center text-[#1d1d1f] active-scale">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <form onsubmit="handleMilestoneSubmit(event)" class="p-6 space-y-4">
+                <input type="hidden" id="milestone-id-input">
+                <div>
+                    <label class="block text-xs font-semibold text-[#7a7a7a] mb-1">Vendor Terpilih</label>
+                    <select id="milestone-vendor-select" onchange="calculateMilestoneAmount()" class="w-full bg-[#f5f5f7] border border-[#e0e0e0] rounded-[11px] px-3.5 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#0066cc]" required>
+                        <!-- Selected vendors loaded dynamically -->
+                    </select>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-[#7a7a7a] mb-1">Keterangan Termin</label>
+                        <select id="milestone-type-select" onchange="handleMilestoneTypeChange()" class="w-full bg-[#f5f5f7] border border-[#e0e0e0] rounded-[11px] px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#0066cc]">
+                            <option value="DP">DP</option>
+                            <option value="Pelunasan">Pelunasan</option>
+                            <option value="Lainnya">Lainnya (Isi Sendiri)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-[#7a7a7a] mb-1">Persentase DP / Termin (%)</label>
+                        <input type="number" id="milestone-pct-input" min="0" max="100" placeholder="contoh: 30" oninput="calculateMilestoneAmount()" class="w-full bg-[#f5f5f7] border border-[#e0e0e0] rounded-[11px] px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#0066cc]">
+                    </div>
+                </div>
+
+                <div id="milestone-custom-type-container" class="hidden">
+                    <label class="block text-xs font-semibold text-[#7a7a7a] mb-1">Keterangan Lainnya</label>
+                    <input type="text" id="milestone-custom-type-input" placeholder="contoh: Charge Tambahan AC / Cicilan Ke-3" class="w-full bg-[#f5f5f7] border border-[#e0e0e0] rounded-[11px] px-3.5 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#0066cc]">
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-[#7a7a7a] mb-1">Jumlah Tagihan (Rp)</label>
+                        <input type="number" id="milestone-amount-input" placeholder="contoh: 5000000" class="w-full bg-[#f5f5f7] border border-[#e0e0e0] rounded-[11px] px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#0066cc]" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-[#7a7a7a] mb-1">Jatuh Tempo</label>
+                        <input type="date" id="milestone-duedate-input" class="w-full bg-[#f5f5f7] border border-[#e0e0e0] rounded-[11px] px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#0066cc]" required>
+                    </div>
+                </div>
+                <div class="pt-4 flex items-center justify-end space-x-2">
+                    <button type="button" onclick="closeAddMilestoneModal()" class="bg-[#f5f5f7] text-[#1d1d1f] rounded-full text-xs px-5 py-2.5 font-semibold active-scale">Batal</button>
+                    <button type="submit" class="bg-[#0066cc] text-white rounded-full text-xs px-6 py-2.5 font-semibold active-scale hover:bg-[#0071e3] transition">Simpan Termin</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Create/Edit Project Modal -->
+    <div id="sa-project-modal" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="w-full max-w-[480px] bg-white text-[#1d1d1f] rounded-[18px] overflow-hidden border border-[#e0e0e0] flex flex-col">
+            <div class="p-6 border-b border-[#e0e0e0] flex items-center justify-between">
+                <div>
+                    <h3 class="text-xl font-semibold apple-tight-title" id="sa-project-modal-title">Buat Proyek Baru</h3>
+                    <p class="text-xs text-[#7a7a7a]" id="sa-project-modal-desc">Konfigurasikan client baru dan inisialisasi workspace pernikahan.</p>
+                </div>
+                <button onclick="closeCreateProjectModal()" class="w-8 h-8 rounded-full bg-[#f5f5f7] flex items-center justify-center text-[#1d1d1f] active-scale">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <form onsubmit="handleCreateProjectSubmit(event)" class="p-6 space-y-4">
+                <input type="hidden" id="sa-project-id-input">
+                <div>
+                    <label class="block text-xs font-semibold text-[#7a7a7a] mb-1">Nama Proyek / Pasangan</label>
+                    <input type="text" id="sa-project-title-input" placeholder="contoh: Rina & Doni's Wedding" class="w-full bg-[#f5f5f7] border border-[#e0e0e0] rounded-[11px] px-3.5 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#0066cc]" required>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-[#7a7a7a] mb-1">Batas Anggaran (Limit)</label>
+                        <input type="number" id="sa-project-budget-input" value="300000000" class="w-full bg-[#f5f5f7] border border-[#e0e0e0] rounded-[11px] px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#0066cc]" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-[#7a7a7a] mb-1">Tanggal Pernikahan (H-Day)</label>
+                        <input type="date" id="sa-project-date-input" class="w-full bg-[#f5f5f7] border border-[#e0e0e0] rounded-[11px] px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#0066cc]" required>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-[#7a7a7a] mb-1">Google Apps Script API URL (Opsional)</label>
+                    <input type="url" id="sa-project-gas-input" placeholder="https://script.google.com/macros/s/..." class="w-full bg-[#f5f5f7] border border-[#e0e0e0] rounded-[11px] px-3.5 py-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-[#0066cc]">
+                </div>
+                <div id="sa-seed-option-container">
+                    <label class="flex items-center space-x-2 text-xs font-semibold text-[#1d1d1f] cursor-pointer bg-blue-50/50 border border-blue-200 rounded-[11px] p-3.5 mt-2">
+                        <input type="checkbox" id="sa-project-seed-checkbox" checked class="rounded text-[#0066cc] focus:ring-[#0066cc] w-4 h-4">
+                        <span>Pre-seed dengan Data Demo (Isi data dummy vendor, to-do list &amp; guest)</span>
+                    </label>
+                </div>
+                <div class="pt-4 flex items-center justify-end space-x-2">
+                    <button type="button" onclick="closeCreateProjectModal()" class="bg-[#f5f5f7] text-[#1d1d1f] rounded-full text-xs px-5 py-2.5 font-semibold active-scale">Batal</button>
+                    <button type="submit" class="bg-[#0066cc] text-white rounded-full text-xs px-6 py-2.5 font-semibold active-scale hover:bg-[#0071e3] transition">Simpan Proyek</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add/Edit Role Modal -->
+    <div id="sa-role-modal" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="w-full max-w-[450px] bg-white text-[#1d1d1f] rounded-[18px] overflow-hidden border border-[#e0e0e0] flex flex-col">
+            <div class="p-6 border-b border-[#e0e0e0] flex items-center justify-between">
+                <div>
+                    <h3 class="text-xl font-semibold apple-tight-title" id="sa-role-modal-title">Tambah Peran</h3>
+                    <p class="text-xs text-[#7a7a7a]">Atur akun anggota client dan batasan otoritasnya.</p>
+                </div>
+                <button onclick="closeAddRoleModal()" class="w-8 h-8 rounded-full bg-[#f5f5f7] flex items-center justify-center text-[#1d1d1f] active-scale">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <form onsubmit="handleRoleSubmit(event)" class="p-6 space-y-4">
+                <input type="hidden" id="sa-role-original-email">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-[#7a7a7a] mb-1">Nama Peran (Kode)</label>
+                        <select id="sa-role-name-input" class="w-full bg-[#f5f5f7] border border-[#e0e0e0] rounded-[11px] px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#0066cc]" onchange="prefillPermissionsByRole(this.value)">
+                            <option value="client_decider">Decider</option>
+                            <option value="client_initiator">Initiator</option>
+                            <option value="wedding_planner">Planner</option>
+                            <option value="custom">Peran Kustom</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-[#7a7a7a] mb-1">Label Tampilan</label>
+                        <input type="text" id="sa-role-label-input" placeholder="contoh: Decider (Tama)" class="w-full bg-[#f5f5f7] border border-[#e0e0e0] rounded-[11px] px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#0066cc]" required>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-[#7a7a7a] mb-1">Email Pengguna (Username)</label>
+                    <input type="email" id="sa-role-email-input" placeholder="contoh: tama@sg-corp.com" class="w-full bg-[#f5f5f7] border border-[#e0e0e0] rounded-[11px] px-3.5 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#0066cc]" required>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-[#7a7a7a] mb-1">Wedding Token (PIN Masuk)</label>
+                    <input type="text" id="sa-role-password-input" placeholder="contoh: 270327" class="w-full bg-[#f5f5f7] border border-[#e0e0e0] rounded-[11px] px-3.5 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-[#0066cc]" required>
+                </div>
+                
+                <!-- Permissions Toggles -->
+                <div class="space-y-3 bg-[#fafafc] border border-[#e0e0e0] p-4 rounded-[11px]">
+                    <span class="block text-xs font-semibold text-[#7a7a7a] uppercase tracking-wider mb-2"><i class="fa-solid fa-shield-halved text-[#0066cc] mr-1"></i> Hak Otoritas Akses (Permissions)</span>
+                    
+                    <label class="flex items-center space-x-2 text-xs text-[#1d1d1f] cursor-pointer">
+                        <input type="checkbox" id="sa-perm-vendor" class="rounded text-[#0066cc] focus:ring-[#0066cc]">
+                        <span>Mengusulkan &amp; Edit Opsi Vendor</span>
+                    </label>
+                    <label class="flex items-center space-x-2 text-xs text-[#1d1d1f] cursor-pointer">
+                        <input type="checkbox" id="sa-perm-budget" class="rounded text-[#0066cc] focus:ring-[#0066cc]">
+                        <span>Mengedit Batas Maksimal Anggaran</span>
+                    </label>
+                    <label class="flex items-center space-x-2 text-xs text-[#1d1d1f] cursor-pointer">
+                        <input type="checkbox" id="sa-perm-milestone" class="rounded text-[#0066cc] focus:ring-[#0066cc]">
+                        <span>Mengelola (CRUD) Jadwal Termin Pembayaran</span>
+                    </label>
+                    <label class="flex items-center space-x-2 text-xs text-[#1d1d1f] cursor-pointer">
+                        <input type="checkbox" id="sa-perm-verify" class="rounded text-[#0066cc] focus:ring-[#0066cc]">
+                        <span>Memverifikasi Pembayaran (Ubah Status Lunas)</span>
+                    </label>
+                </div>
+
+                <div class="pt-4 flex items-center justify-end space-x-2">
+                    <button type="button" onclick="closeAddRoleModal()" class="bg-[#f5f5f7] text-[#1d1d1f] rounded-full text-xs px-5 py-2.5 font-semibold active-scale">Batal</button>
+                    <button type="submit" class="bg-[#0066cc] text-white rounded-full text-xs px-6 py-2.5 font-semibold active-scale hover:bg-[#0071e3] transition">Simpan Peran</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

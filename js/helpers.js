@@ -65,6 +65,18 @@ function loadProjectData(projectId) {
     appState.logs = localStorage.getItem(logsKey)
         ? JSON.parse(localStorage.getItem(logsKey))
         : (projectId === "WD-AURA-002" ? [...defaultLogs] : []);
+
+    // Seed timeline
+    const timelineKey = `aura_project_${projectId}_timeline`;
+    appState.timeline = localStorage.getItem(timelineKey)
+        ? JSON.parse(localStorage.getItem(timelineKey))
+        : (projectId === "WD-AURA-002" ? [...defaultTimeline] : []);
+
+    // Seed venue comparison
+    const venueCompKey = `aura_project_${projectId}_venue_comparison`;
+    appState.venueComparison = localStorage.getItem(venueCompKey)
+        ? JSON.parse(localStorage.getItem(venueCompKey))
+        : (projectId === "WD-AURA-002" ? JSON.parse(JSON.stringify(defaultVenueComparison)) : { venue_a: "Venue A", venue_b: "Venue B", elimination_reason: "", features: [] });
 }
 
 function saveProjectData(projectId) {
@@ -73,6 +85,8 @@ function saveProjectData(projectId) {
     localStorage.setItem(`aura_project_${projectId}_payments`, JSON.stringify(appState.payments));
     localStorage.setItem(`aura_project_${projectId}_vendors`, JSON.stringify(appState.vendors));
     localStorage.setItem(`aura_project_${projectId}_logs`, JSON.stringify(appState.logs));
+    localStorage.setItem(`aura_project_${projectId}_timeline`, JSON.stringify(appState.timeline));
+    localStorage.setItem(`aura_project_${projectId}_venue_comparison`, JSON.stringify(appState.venueComparison));
     
     // Also update project metadata in projects list
     const project = appState.projects.find(p => p.id === projectId);

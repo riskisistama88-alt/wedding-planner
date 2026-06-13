@@ -4,6 +4,12 @@ window.onload = function() {
     if (savedProjects) {
         try {
             appState.projects = JSON.parse(savedProjects);
+            // Dynamic Migration: Force update local cache with the new active GAS URL for default project
+            const defaultProj = appState.projects.find(p => p.id === "WD-AURA-002");
+            if (defaultProj && (!defaultProj.gasApiUrl || defaultProj.gasApiUrl === "")) {
+                defaultProj.gasApiUrl = "https://script.google.com/macros/s/AKfycbyve5t4AnFkZjlzYJ-PNX610aNgFD8fsSYJg60APHMshT6hBgZhrK-2GHxdIv8JCxnsig/exec";
+                localStorage.setItem("aura_projects_list", JSON.stringify(appState.projects));
+            }
         } catch(e) {
             appState.projects = [...defaultProjectsList];
         }
@@ -15,10 +21,23 @@ window.onload = function() {
     // Check Session in LocalStorage
     const localSession = localStorage.getItem("aura_session");
     const savedGasUrl = localStorage.getItem("aura_gas_url");
+    const savedGeminiKey = localStorage.getItem("aura_gemini_api_key");
     
     if (savedGasUrl) {
         appState.gasApiUrl = savedGasUrl;
         document.getElementById("gas-deployed-url").value = savedGasUrl;
+    } else {
+        // Fallback: Bind to the new active GAS URL directly
+        appState.gasApiUrl = "https://script.google.com/macros/s/AKfycbyve5t4AnFkZjlzYJ-PNX610aNgFD8fsSYJg60APHMshT6hBgZhrK-2GHxdIv8JCxnsig/exec";
+        localStorage.setItem("aura_gas_url", appState.gasApiUrl);
+    }
+
+    if (savedGeminiKey) {
+        appState.geminiApiKey = savedGeminiKey;
+        const keyInput = document.getElementById("gemini-api-key-input");
+        if (keyInput) keyInput.value = savedGeminiKey;
+    } else {
+        appState.geminiApiKey = "";
     }
 
     if (localSession) {
@@ -524,5 +543,99 @@ function postToGas(payload) {
     })
     .catch(err => {
         console.error("GAS Sync Error: ", err);
+    });
+}
+
+// =========================================================================
+// GEMINI AI API KEY & COMPARISON ANALYSIS HANDLERS
+// =========================================================================
+
+function saveGeminiApiKey() {
+    const key = document.getElementById("gemini-api-key-input").value.trim();
+    if (key) {
+        appState.geminiApiKey = key;
+        localStorage.setItem("aura_gemini_api_key", key);
+        showToast("Gemini AI API Key berhasil disimpan!", "success");
+    } else {
+        appState.geminiApiKey = "";
+        localStorage.removeItem("aura_gemini_api_key");
+        showToast("Gemini AI API Key dihapus.", "info");
+    }
+}
+
+function triggerGeminiAnalysis() {
+    if (!appState.geminiApiKey) {
+        showToast("Gemini API Key belum dikonfigurasi! Buka menu 'Setup GAS & AI' untuk menyimpannya.", "error");
+        return;
+    }
+
+    const categoryVendors = appState.vendors.filter(v => v.category === appState.activeCategory);
+    if (categoryVendors.length < 2) {
+        showToast(`Minimal harus ada 2 alternatif vendor di kategori ${appState.activeCategory} untuk dibandingkan!`, "error");
+        return;
+    }
+
+    const btn = document.getElementById("btn-gemini-analyze");
+    const resultDiv = document.getElementById("gemini-analysis-result");
+
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin mr-1.5"></i> Menganalisis...`;
+    }
+
+    let vendorListText = "";
+    categoryVendors.forEach((v, index) => {
+        vendorListText += `Alternatif Vendor ${index + 1}:\n- Nama Vendor: ${v.vendor_name}\n- Paket Layanan: ${v.package_name}\n- Harga Paket: Rp${v.price.toLocaleString('id-ID')}\n- Catatan Teknis: ${v.notes || 'Tidak ada catatan khusus.'}\n\n`;
+    });
+
+    const prompt = `Anda adalah Asisten Virtual Wedding Planner AI Premium. Tolong buatkan perbandingan komparatif dan ulasan rekomendasi untuk alternatif vendor di kategori "${appState.activeCategory}" berikut ini:
+
+${vendorListText}
+Ulas secara ringkas dalam format terstruktur:
+1. Kelebihan & Kekurangan masing-masing pilihan vendor.
+2. Rekomendasi Pilihan Terbaik (Decider Recommendation) berdasarkan nilai value-for-money, harga, catatan teknis, dan kepraktisan.
+
+Jawab dalam Bahasa Indonesia secara sopan, ramah, dan profesional. Gunakan format poin-poin yang mudah dibaca dan tebalkan informasi penting.`;
+
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${appState.geminiApiKey}`;
+
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            contents: [{
+                parts: [{ text: prompt }]
+            }]
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts[0]) {
+            let resultText = data.candidates[0].content.parts[0].text;
+            
+            // Simple markdown parser for bold styling
+            resultText = resultText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            resultText = resultText.replace(/\*(.*?)\*/g, '<em>$1</em>');
+            
+            if (resultDiv) {
+                resultDiv.innerHTML = resultText;
+                resultDiv.classList.remove("hidden");
+            }
+            showToast("Komparasi Gemini AI berhasil dimuat!", "success");
+        } else {
+            showToast("Respons API tidak valid. Periksa kuota atau status kunci API Anda.", "error");
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        showToast("Gagal memanggil Gemini API. Periksa koneksi atau validitas API Key Anda.", "error");
+    })
+    .finally(() => {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles text-[10px]"></i> <span>Analisis Sekarang</span>`;
+        }
     });
 }

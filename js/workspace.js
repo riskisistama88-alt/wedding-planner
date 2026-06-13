@@ -3,6 +3,7 @@ function renderWorkspace() {
     renderBudgetCalculations();
     renderVendorGrid();
     renderLogs();
+    updateGeminiWidget();
 }
 
 function renderCategoryPills() {
@@ -388,4 +389,18 @@ function showToast(message, type = "success") {
         toast.classList.add("translate-x-12", "opacity-0");
         setTimeout(() => toast.remove(), 300);
     }, 4000);
+}
+
+function updateGeminiWidget() {
+    const widget = document.getElementById("gemini-ai-widget");
+    const categorySpan = document.getElementById("gemini-active-category");
+    
+    if (!widget) return;
+
+    if (appState.activeCategory === "All") {
+        widget.classList.add("hidden");
+    } else {
+        widget.classList.remove("hidden");
+        if (categorySpan) categorySpan.innerText = appState.activeCategory;
+    }
 }

@@ -163,7 +163,7 @@ const defaultProjectsList = [
         title: "Indah & Tama's Wedding",
         targetDate: "2027-03-20",
         budgetLimit: 350000000,
-        gasApiUrl: "",
+        gasApiUrl: "https://script.google.com/macros/s/AKfycbyve5t4AnFkZjlzYJ-PNX610aNgFD8fsSYJg60APHMshT6hBgZhrK-2GHxdIv8JCxnsig/exec",
         roles: [
             {
                 roleName: "client_decider",
@@ -205,6 +205,42 @@ const defaultProjectsList = [
     }
 ];
 
+// Default Timeline Data
+const defaultTimeline = [
+    {
+        id: "TL-001",
+        date_label: "Sabtu, 6 Juni 2026",
+        title: "Acara Lamaran (Engagement)",
+        details: "Diselenggarakan secara khidmat di Bandung. Penyerahan tanda pengikat awal."
+    },
+    {
+        id: "TL-002",
+        date_label: "Setiap Bulan (Akhir Pekan)",
+        title: "Pertemuan Tatap Muka & Sidang Vendor",
+        details: "Koordinasi bulanan di pertengahan bulan untuk melakukan survei lokasi (venue check) dan rapat vendor teknis langsung di Bandung."
+    },
+    {
+        id: "TL-003",
+        date_label: "Sabtu, 20 Maret 2027",
+        title: "Hari H Resepsi Pernikahan",
+        details: "Acara utama Akad & Resepsi pasca Idul Fitri 2027 bertempat di Aula Badarusamsi Ditkuad Bandung."
+    }
+];
+
+// Default Venue Comparison Table Data
+const defaultVenueComparison = {
+    venue_a: "Aula Badarusamsi (Terpilih)",
+    venue_b: "Aula LPTQ Jabar (Dieliminasi)",
+    elimination_reason: "Aula Badarusamsi jauh lebih praktis karena listrik bebas gubukan genset, memiliki charge AC murah, dan ukuran panggung pelaminan 7x9m sangat proporsional.",
+    features: [
+        { feature_name: "Harga Sewa", value_a: "Rp8.500.000 (Kebersihan inc.)", value_b: "Rp5.500.000 (Gedung kosong)", is_highlight_a: true, is_highlight_b: false },
+        { feature_name: "Luas Area", value_a: "24 x 12 Meter (288 m²)", value_b: "400 m²", is_highlight_a: false, is_highlight_b: false },
+        { feature_name: "Listrik & Genset", value_a: "Gratis / Bebas Genset", value_b: "5.000W (Wajib sewa genset)", is_highlight_a: true, is_highlight_b: false },
+        { feature_name: "AC / Pendingin", value_a: "1 Kipas + Charge AC Rp150.000", value_b: "6 AC 1/2 PK (Wajib standing AC)", is_highlight_a: false, is_highlight_b: false },
+        { feature_name: "Batas Waktu", value_a: "06.00 - 14.00 WIB (Pagi)", value_b: "s.d 14.00 WIB", is_highlight_a: false, is_highlight_b: false }
+    ]
+};
+
 // Active State of Local App
 let appState = {
     isLoggedIn: false,
@@ -217,6 +253,8 @@ let appState = {
     tasks: [],
     guests: [],
     payments: [],
+    timeline: [],
+    venueComparison: {},
     activeCategory: "All",
     activeStatus: "All",
     activeTaskFilter: "All",

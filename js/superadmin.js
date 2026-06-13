@@ -293,12 +293,16 @@ function handleCreateProjectSubmit(e) {
             { tanggal: new Date(), user: "admin@aurawedding.com", aktivitas: "CREATE_PROJ", detail: `Inisialisasi proyek baru ${title}` }
         ] : [];
         const payments = [];
+        const timeline = seedDemo ? [...defaultTimeline] : [];
+        const venueComp = seedDemo ? JSON.parse(JSON.stringify(defaultVenueComparison)) : { venue_a: "", venue_b: "", elimination_reason: "", features: [] };
 
         localStorage.setItem(`aura_project_${newId}_tasks`, JSON.stringify(tasks));
         localStorage.setItem(`aura_project_${newId}_guests`, JSON.stringify(guests));
         localStorage.setItem(`aura_project_${newId}_payments`, JSON.stringify(payments));
         localStorage.setItem(`aura_project_${newId}_vendors`, JSON.stringify(vendors));
         localStorage.setItem(`aura_project_${newId}_logs`, JSON.stringify(logs));
+        localStorage.setItem(`aura_project_${newId}_timeline`, JSON.stringify(timeline));
+        localStorage.setItem(`aura_project_${newId}_venue_comparison`, JSON.stringify(venueComp));
 
         saActiveProjectId = newId;
         showToast(`Proyek ${title} sukses dibuat!`, "success");

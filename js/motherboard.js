@@ -299,7 +299,7 @@ function handleUploadReceiptSubmit(e) {
     closeUploadReceiptModal();
     renderPaymentMilestones();
     renderLogs();
-    showToast("Bukti pembayaran berhasil dikirim untuk verifikasi!", "success");
+    showToast(`${getActiveRoleLabel()} mengunggah bukti transfer untuk verifikasi.`, "success");
 }
 
 function verifyPayment(paymentId) {
@@ -323,7 +323,7 @@ function verifyPayment(paymentId) {
 
     renderPaymentMilestones();
     renderLogs();
-    showToast("Pembayaran berhasil diverifikasi & dilunasi!", "success");
+    showToast(`${getActiveRoleLabel()} memverifikasi & melunasi pembayaran.`, "success");
 }
 
 function handleMilestoneTypeChange() {
@@ -536,7 +536,7 @@ function handleMilestoneSubmit(e) {
     closeAddMilestoneModal();
     renderPaymentMilestones();
     renderLogs();
-    showToast("Termin pembayaran berhasil disimpan!", "success");
+    showToast(`${getActiveRoleLabel()} menyimpan termin pembayaran.`, "success");
 }
 
 function deleteMilestone(pmId) {
@@ -564,7 +564,7 @@ function deleteMilestone(pmId) {
 
     renderPaymentMilestones();
     renderLogs();
-    showToast("Termin pembayaran berhasil dihapus.", "info");
+    showToast(`${getActiveRoleLabel()} menghapus termin pembayaran.`, "info");
 }
 
 // =========================================================================
@@ -651,7 +651,7 @@ function handleTimelineSubmit(e) {
             item.date_label = dateLabel;
             item.title = title;
             item.details = details;
-            showToast("Acara timeline berhasil diperbarui!", "success");
+            showToast(`${getActiveRoleLabel()} memperbarui acara timeline.`, "success");
         }
     } else {
         const newItem = {
@@ -661,7 +661,7 @@ function handleTimelineSubmit(e) {
             details: details
         };
         appState.timeline.push(newItem);
-        showToast("Acara timeline berhasil ditambahkan!", "success");
+        showToast(`${getActiveRoleLabel()} menambahkan acara timeline baru.`, "success");
     }
 
     saveProjectData(appState.weddingId);
@@ -676,7 +676,7 @@ function deleteTimeline(id) {
         appState.timeline.splice(index, 1);
         saveProjectData(appState.weddingId);
         renderTimeline();
-        showToast("Acara timeline berhasil dihapus.", "info");
+        showToast(`${getActiveRoleLabel()} menghapus acara timeline.`, "info");
     }
 }
 
@@ -838,7 +838,7 @@ function handleVenueCompSubmit(e) {
     saveProjectData(appState.weddingId);
     closeEditVenueCompModal();
     renderVenueComparison();
-    showToast("Analisis perbandingan venue berhasil disimpan!", "success");
+    showToast(`${getActiveRoleLabel()} menyimpan analisis perbandingan venue.`, "success");
 }
 
 function autoGenerateVenueComparison() {
@@ -920,7 +920,7 @@ Kembalikan hasil analisis HANYA dalam format JSON mentah valid seperti ini (jang
                 tempFeatures = parsed.features || [];
                 renderFeaturesListInModal();
 
-                showToast("Analisis komparasi venue berhasil digenerate otomatis!", "success");
+                showToast(`${getActiveRoleLabel()} men-generate analisis komparasi venue otomatis via Gemini AI.`, "success");
             } catch (jsonErr) {
                 console.error("JSON parsing error:", jsonErr, resultText);
                 showToast("Format respons AI tidak valid. Coba lagi.", "error");

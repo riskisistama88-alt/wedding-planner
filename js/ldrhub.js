@@ -178,7 +178,7 @@ function toggleTaskCompletion(taskId) {
         detail: `Mengubah status tugas "${task.title}" menjadi ${task.completed ? "SELESAI" : "BELUM SELESAI"}`
     });
     renderLogs();
-    showToast(`Status tugas diperbarui!`, "success");
+    showToast(`${getActiveRoleLabel()} memperbarui status tugas "${task.title}".`, "success");
 }
 
 function openAddTaskModal() {
@@ -219,7 +219,7 @@ function handleAddTaskSubmit(e) {
     closeAddTaskModal();
     renderTasks();
     renderLogs();
-    showToast("Tugas berhasil ditambahkan!", "success");
+    showToast(`${getActiveRoleLabel()} menambahkan tugas checklist baru: "${title}".`, "success");
 }
 
 function deleteTask(taskId) {
@@ -239,7 +239,7 @@ function deleteTask(taskId) {
     
     renderTasks();
     renderLogs();
-    showToast("Tugas berhasil dihapus.", "info");
+    showToast(`${getActiveRoleLabel()} menghapus tugas checklist "${title}".`, "info");
 }
 
 function renderGuests() {
@@ -347,7 +347,7 @@ function updateGuestRSVP(guestId, newRsvp) {
     
     renderGuests();
     renderLogs();
-    showToast(`RSVP ${guest.name} diperbarui!`, "success");
+    showToast(`${getActiveRoleLabel()} memperbarui RSVP tamu ${guest.name} menjadi ${newRsvp}.`, "success");
 }
 
 function openAddGuestModal() {
@@ -392,7 +392,7 @@ function handleAddGuestSubmit(e) {
     closeAddGuestModal();
     renderGuests();
     renderLogs();
-    showToast("Tamu berhasil ditambahkan!", "success");
+    showToast(`${getActiveRoleLabel()} menambahkan tamu baru: "${name}".`, "success");
 }
 
 function deleteGuest(guestId) {
@@ -412,5 +412,5 @@ function deleteGuest(guestId) {
     
     renderGuests();
     renderLogs();
-    showToast("Tamu berhasil dihapus.", "info");
+    showToast(`${getActiveRoleLabel()} menghapus tamu "${name}".`, "info");
 }

@@ -243,7 +243,7 @@ function updateStatus(vendorId, newStatus) {
     }
 
     renderWorkspace();
-    showToast(`Status ${vendor.vendor_name} diperbarui!`, "success");
+    showToast(`${getActiveRoleLabel()} memperbarui status ${vendor.vendor_name} menjadi ${newStatus}.`, "success");
 }
 
 function deleteVendor(vendorId) {
@@ -277,7 +277,7 @@ function deleteVendor(vendorId) {
     }
 
     renderWorkspace();
-    showToast(`Vendor ${vendorName} telah dihapus.`, "info");
+    showToast(`${getActiveRoleLabel()} menghapus usulan vendor ${vendorName}.`, "info");
 }
 
 function openAddVendorModal() {
@@ -362,7 +362,7 @@ function handleFormSubmit(e) {
 
     closeAddVendorModal();
     renderWorkspace();
-    showToast(`Usulan vendor ${name} sukses ditambahkan!`, "success");
+    showToast(`${getActiveRoleLabel()} mengusulkan vendor baru: ${name}.`, "success");
 }
 
 function showToast(message, type = "success") {

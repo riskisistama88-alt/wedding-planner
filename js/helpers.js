@@ -141,3 +141,14 @@ function vendorNameFromId(vendorId) {
     const v = appState.vendors.find(x => x.vendor_id === vendorId);
     return v ? v.vendor_name : "Unknown Vendor";
 }
+
+function getRoleLabelByEmail(email) {
+    if (email === "admin@aurawedding.com") return "Superadmin";
+    
+    const project = appState.projects.find(p => p.id === appState.weddingId);
+    if (project && project.roles) {
+        const role = project.roles.find(r => r.email.toLowerCase() === email.toLowerCase());
+        if (role) return role.label;
+    }
+    return email;
+}

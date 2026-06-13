@@ -44,6 +44,38 @@ window.onload = function() {
     } else {
         document.getElementById("auth-portal").classList.remove("hidden");
     }
+
+    // Listen to LocalStorage changes across other tabs for real-time collaboration
+    window.addEventListener('storage', function(event) {
+        if (!appState.isLoggedIn) return;
+        
+        const prefix = `aura_project_${appState.weddingId}_`;
+        if (event.key && event.key.startsWith(prefix)) {
+            const subKey = event.key.substring(prefix.length);
+            
+            // Reload local project data
+            loadProjectData(appState.weddingId);
+            
+            // Re-render the currently active tab view
+            renderActiveTabContents();
+            
+            // Show toast notification for new log entry
+            if (subKey === "logs" && event.newValue) {
+                try {
+                    const newLogs = JSON.parse(event.newValue);
+                    if (newLogs.length > 0) {
+                        const latestLog = newLogs[0];
+                        if (latestLog.user !== appState.userEmail) {
+                            const userRoleName = getRoleLabelByEmail(latestLog.user);
+                            showToast(`${userRoleName}: ${latestLog.detail}`, "info");
+                        }
+                    }
+                } catch(e) {
+                    console.error("Error parsing storage log update:", e);
+                }
+            }
+        }
+    });
 };
 
 function initializeWorkspace() {
@@ -332,6 +364,26 @@ function renderLogs() {
         `;
         container.appendChild(row);
     });
+}
+
+function renderActiveTabContents() {
+    const workspaceView = document.getElementById("workspace-view");
+    const motherboardView = document.getElementById("motherboard-view");
+    const ldrhubView = document.getElementById("ldrhub-view");
+    const superadminView = document.getElementById("superadmin-view");
+
+    if (workspaceView && !workspaceView.classList.contains("hidden")) {
+        renderWorkspace();
+    }
+    if (motherboardView && !motherboardView.classList.contains("hidden")) {
+        renderMotherboardDashboard();
+    }
+    if (ldrhubView && !ldrhubView.classList.contains("hidden")) {
+        renderLdrHub();
+    }
+    if (superadminView && !superadminView.classList.contains("hidden")) {
+        renderSuperadminPanel();
+    }
 }
 
 function toggleDeveloperConsole() {
